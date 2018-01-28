@@ -1,0 +1,20 @@
+{
+  "name": "teamsynch",
+  "version": "1.0.0",
+  "description": "Test",
+  "main": "server.js",
+  "scripts": {
+    "test": "test",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Eldad7/peerJStest.git"
+  },
+  "author": "Eldad C",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Eldad7/peerJStest/issues"
+  },
+  "homepage": "https://github.com/Eldad7/peerJStest#readme"
+}

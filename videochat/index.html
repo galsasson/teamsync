@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title='Test VC'>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<link rel="stylesheet" href="style.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<script src="http://cdn.peerjs.com/0.3/peer.min.js"></script>
+		<script src="vcpeer.js"></script>
+		<script src="clmtrackr.js"></script>
+		<!-- <script src="clmtrackr.module.js"></script> -->
+	</head>
+	<body >
+		<h1>Team Synch</h1>
+		<div class="container">
+			<div class='row'>
+				<div class="input-group mb-3">
+					<label>Please enter friend's id</label><br>
+					<input type="text" id='friendid' class="form-control">
+					<button id='call' onClick="callFriend();">call</button>
+					<button id='disconnect' onClick="disconnect();" disabled="true">Disconnect</button>
+				</div>
+			</div>
+		</div>
+		<div class="container">
+			<div class="row">
+				<div class="col-md-4">
+					<h2 id='friend'></h2>
+					<video id="foreignVideo" width="320" height="240" autoplay="true"></video>
+					<canvas id="foreignCanvas" width="320" height="240" style="position: absolute;left: 0px;"></canvas>
+				</div>
+				<div class="col-md-4">
+					<img id='inSync' src='white.jpg' width="320" height="240">
+				</div>
+				<div class="col-md-4">
+					<h2 id="me"></h2>
+					<video id="localVideo" width="320" height="240" muted="true" autoplay="true" ></video>
+					<canvas id="localCanvas" width="320" height="240" style="position: absolute;left: 0px;"></canvas>
+				</div>
+			</div>
+		</div>
+
+	</body>
+</html>
