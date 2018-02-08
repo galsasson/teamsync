@@ -4,9 +4,10 @@ var videoStream = null;
 var constraints = {audio:true,video:true};
 var mediaConnection = null,dataConnection=null,myLocations=null;
 var localCtracker,foreignCTracker, localCanvasInput, localcc,foreigncc,foreignCanvasInput;
+var video,canvas,ctx,w,h; //B&W Effects
+var locator = 0;
 
 $(document).ready(function(){
-	$('#me').hide();
 	peer = new Peer({key: 'lwjd5qra8257b9'});
 	peer.on('open', function(id) {
 		myId=id;
@@ -43,7 +44,18 @@ $(document).ready(function(){
 	peer.on('connection', function(conn) { 
 		console.log('incoming connection');
 		conn.on('data',function(data){
-			checkLocations(data);
+			//locator = (checkLocations(data) * 10)/71;
+			var video = document.getElementById('foreignVideo'),
+				    canvas = document.getElementById('foreignCanvas'),
+				    ctx = canvas.getContext('2d'),
+				    w = canvas.width,
+				    h = canvas.height;
+				    ctx.drawImage(video, 0, 0, w, h);
+				    var apx = ctx.getImageData(0, 0, w, h);
+				    var vidData = apx.data;
+			fc = null;
+			fc = new frameConverter(video,canvas,data);
+			fc.setEffect('edge detection');
 		});
 		conn.on('close', function(){
 			disconnect();
@@ -57,8 +69,9 @@ $(document).ready(function(){
 	localcc = localCanvasInput.getContext('2d');
 	foreignCanvasInput = document.getElementById('foreignCanvas');
 	foreigncc = foreignCanvasInput.getContext('2d');
-	console.log('Ready');
-
+	fc = new frameConverter(document.getElementById('foreignVideo'),document.getElementById('foreignCanvas'));
+	fc.setEffect('edge detection');
+	
 });
 
 function callFriend(){
@@ -70,13 +83,35 @@ function callFriend(){
 		  videoStream = stream;
 		  console.log('calling');
 		   $('#localVideo').prop('src', URL.createObjectURL(videoStream));
-		   $('#me').show();
 		   	dataConnection = peer.connect(friendID);
 		   	dataConnection.on('data', function(data){
-		   		if (checkLocations(data)>65)
-		   			$("#inSync").attr("src","v.jpg");
-		   		else
-		   			$("#inSync").attr("src","x.png");
+		   		var video = document.getElementById('foreignVideo'),
+				    canvas = document.getElementById('foreignCanvas'),
+				    ctx = canvas.getContext('2d'),
+				    w = canvas.width,
+				    h = canvas.height;
+				    ctx.drawImage(video, 0, 0, w, h);
+				    var apx = ctx.getImageData(0, 0, w, h);
+				    var vidData = apx.data;
+				    fc = null;
+					fc = new frameConverter(video,canvas,data);
+					fc.setEffect('edge detection');
+				    //locator = (checkLocations(data)*10)/71;
+		   		/*if (checkLocations(data)>65){
+				   // video.style.display = 'none';
+				    for(var i = 0; i < data.length; i+=4)
+				    {
+				        var r = vidData[i],
+				            g = vidData[i+1],
+				            b = vidData[i+2],
+				            gray = (r+g+b)/3;
+				        vidData[i] = gray;
+				        vidData[i+1] = gray;
+				        vidData[i+2] = gray;
+				    }
+				}
+		   		apx.data = vidData;
+				ctx.putImageData(apx, 0, 0);*/
 		   	});
 			mediaConnection = peer.call(friendID,videoStream);
 			$('#call').prop('disabled',true);
@@ -108,42 +143,98 @@ function startTracking(){
 	localCtracker = new clm.tracker();
 	localCtracker.init();
 	localCtracker.start(vid);
-	
-	console.log("tracking");
-	/*foreignCTracker = new clm.tracker();
-	foreignCTracker.init();
-	foreignCTracker.start($('#foreignVideo'));
-	console.log("tracking "+foreignCTracker);*/
-
 	positionLoop();
 }
 function positionLoop() {
 	requestAnimationFrame(positionLoop);
-    //console.log(localPositions = localCtracker.getCurrentPosition());
-    //console.log(localPositions);
-    //var foreignPositions = foreignCTracker.getCurrentPosition();
-    //console.log(foreignPositions);
-    //localcc.clearRect(0, 0, localCanvasInput.width, localCanvasInput.height);
-    //foreigncc.clearRect(0, 0, foreignCanvasInput.width, foreignCanvasInput.height);
-	//localCtracker.draw(localCanvasInput);
-	//foreignCTracker.draw(foreignCanvasInput)
-	localcc.clearRect(0, 0, localCanvasInput.width, localCanvasInput.height);
+	//localcc.clearRect(0, 0, localCanvasInput.width, localCanvasInput.height);
 	if (localCtracker.getCurrentPosition()) {
-		localCtracker.draw(localCanvasInput);
+		//localCtracker.draw(localCanvasInput);
 		myLocations=localCtracker.getCurrentPosition();
-		if (dataConnection!=null)
+		if (dataConnection!=null){
+			//console.log(myLocations);
 			dataConnection.send(myLocations);
+		}
 	}
   }
 
   function checkLocations(locations){
   	var score = 0;
-  	if (myLocations!=null){
+  	if (myLocations!=null && myLocations!=undefined){
 	  	for (var i = 0; i < myLocations.length; i++) {
 	  		if ((Math.abs(Math.abs(myLocations[i][0])) - Math.abs(locations[i][0])<=10) && (Math.abs(Math.abs(myLocations[i][1])) - Math.abs(locations[i][1])<=10))
+	  		//if (Math.abs(myLocations[i][1] - locations[i][1])<=50)
 	  			score++;
 	  	}
-	  	return score;
 	}
-  	return false;
+  	return score;
   }
+
+  function frameConverter(video,canvas,locations) {
+
+    // Set up our frame converter
+    this.video = video;
+    this.viewport = canvas.getContext("2d");
+    this.width = canvas.width;
+    this.height = canvas.height;
+    // Create the frame-buffer canvas
+    this.framebuffer = document.createElement("canvas");
+    this.framebuffer.width = this.width;
+    this.framebuffer.height = this.height;
+    this.ctx = this.framebuffer.getContext("2d");
+    // Default video effect is blur
+    this.effect = JSManipulate.blur;
+    // This variable used to pass ourself to event call-backs
+    var self = this;
+    // Start rendering when the video is playing
+    this.video.addEventListener("play", function() {
+        self.render();
+      }, false);
+      
+    // Change the image effect to be applied  
+    this.setEffect = function(effect){
+      if(effect in JSManipulate){
+          this.effect = JSManipulate[effect];
+      }
+    }
+
+    // Rendering call-back
+    this.render = function() {
+        if (this.video.paused || this.video.ended) {
+          return;
+        }
+        this.renderFrame();
+        var self = this;
+        // Render every 10 ms
+        setTimeout(function () {
+            self.render();
+          }, 10);
+    };
+
+    // Compute and display the next frame 
+    this.renderFrame = function() {
+        // Acquire a video frame from the video element
+        this.ctx.drawImage(this.video, 0, 0, this.video.videoWidth,
+                    this.video.videoHeight,0,0,this.width, this.height);
+        var data = this.ctx.getImageData(0, 0, this.width, this.height);
+        // Apply image effect
+        ;
+        //console.log(10 - (checkLocations(locations)*10/71));
+        //this.effect.filter(data,(10 - (checkLocations(locations)*10/71)));
+        if (checkLocations(locations)*10/71 > 10)
+        	var blurVal = 10;
+        else if (checkLocations(locations)*10/71 < 0)
+        	var blurVal = 0;
+        else
+        	blurVal = Math.round(checkLocations(locations)*10/71);
+        var blurVal = {amount : 10-blurVal};
+        console.log(blurVal);
+        this.effect.filter(data,blurVal);
+        // Render to viewport
+        this.viewport.putImageData(data, 0, 0);
+    return;
+    };
+}
+// Change the image effect applied to the video
+
+//function applyFilter(a){var c=0;c!=="none"?(c={filter:c,values:filterValues,stack:Boolean($("#stack-check")[0].checked),direction:'left',canvas.jsManipulate(a,c)):canvas.jsManipulate("restore")};
