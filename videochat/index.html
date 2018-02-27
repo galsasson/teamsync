@@ -9,9 +9,6 @@
 		<script src="http://cdn.peerjs.com/0.3/peer.min.js"></script>
 		<script src="vcpeer.js"></script>
 		<script src="clmtrackr.js"></script>
-		<script type="text/javascript" src="script/minified/jsmanipulate.min.js"></script>
-		<!-- <script src="customJquery.js"</script> -->
-		<!-- <script src="clmtrackr.module.js"></script> -->
 	</head>
 	<body >
 		<h1>Team Synch</h1>
@@ -30,7 +27,7 @@
 				<div class="col-md-4">
 					<h2 id='friend'></h2>
 					<video id="foreignVideo" class ="v" width="320" height="240" autoplay="true" style="display: none;"></video>
-					<canvas id="foreignCanvas" class="c" width="320" height="240" style="position: absolute;left: 0px;"></canvas>
+					<canvas id="foreignCanvas" class="c" width="340" height="240" style="position: absolute;left: 0px;"></canvas>
 				</div>
 				<div class="col-md-4">
 					<img id='inSync' src='white.jpg' width="320" height="240">
@@ -38,10 +35,10 @@
 				<div class="col-md-4">
 					<h2 id="me"></h2>
 					<video id="localVideo" class="v" width="320" height="240" muted="true" autoplay="true" ></video>
-					<canvas id="localCanvas" class="c" width="320" height="240" style="position: absolute;left: 0px;"></canvas>
+					<canvas id="localCanvas" class="c" width="340" height="240" style="position: absolute;left: 0px;"></canvas>
 				</div>
 			</div>
 		</div>
-
+		<img id="empty" width="220" height="277" src="empty.png" style="display:none;">
 	</body>
 </html>
