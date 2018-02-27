@@ -3,7 +3,7 @@ $(document).ready(function(){
 	var cy=0;
 	var cw=340;
 	var ch=240;
-	var c=document.getElementById("localCanvas");
+	var c=document.getElementById("foreignCanvas");
     var ctx=c.getContext("2d");
     var img=document.getElementById("empty");
     ctx.drawImage(img,cx,cy,cw,ch);

@@ -4,10 +4,6 @@ var videoStream = null;
 var constraints = {audio:true,video:true};
 var mediaConnection = null,dataConnection=null,myLocations=null;
 var localCtracker,foreignCTracker, localCanvasInput, localcc,foreigncc,foreignCanvasInput;
-var cx=0;
-var cy=0;
-var cw=340;
-var ch=240;
 
 $(document).ready(function(){
 	peer = new Peer({key: 'lwjd5qra8257b9'});
@@ -33,6 +29,7 @@ $(document).ready(function(){
 	  	// `stream` is the MediaStream of the remote peer.
 	  	// Here you'd add it to an HTML video/canvas element.
 		  	$('#foreignVideo').prop('src', URL.createObjectURL(stream));
+		  	$('#foreignVideo').css('display','');
 		  	if (mediaConnection == null)
 				mediaConnection = peer.call(call.peer,videoStream);
 			$('#call').prop('disabled',true);
@@ -98,7 +95,8 @@ function disconnect() {
 	mediaConnection = null;
 	dataConnection = null;
 	localCtracker.stop();
-	localcc.clearRect(0, 0, localCanvasInput.width, localCanvasInput.height);
+	//localcc.clearRect(0, 0, localCanvasInput.width, localCanvasInput.height);
+	foreigncc.clearRect(0,0,340,240);
 }
 
 function startTracking(){
@@ -140,17 +138,23 @@ function positionLoop() {
   	return score;
   }
 
-  function drawScale(locator){ 	
-	var c=document.getElementById("foreignCanvas");
-    var ctx=c.getContext("2d");
-    var img=document.getElementById("empty");
-    ctx.drawImage(img,cx,cy,cw,ch);
-    ctx.clearRect(cx,cy,cw,ch);
-    cw=locator*150;
-	cx=(locator/2)*(-75);
-	ch=locator*150;
-	cy=(locator/2)*(-75);
-	ctx.drawImage(img,cx,cy,cw,ch);
+  function drawScale(locator){ 
+  	console.log(locator);
+  	if (isNaN(locator)){
+  		console.log('nan');
+  		return;
+  	}
+    var img=document.createElement('img');
+    img.src = 'empty.png';
+    img.width = 220;
+    img.height = 277;
+    //ctx.drawImage(img,cx,cy,cw,ch);
+    var cw=340+(locator*150),
+		cx=(locator)*(-75),
+		ch=240+(locator*150),
+		cy=(locator)*(-75);
+	foreigncc.clearRect(cx,cy,cw,ch);
+	foreigncc.drawImage(img,cx,cy,cw,ch);
   }
 
   
