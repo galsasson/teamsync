@@ -20,10 +20,14 @@ $(document).ready(function(){
 			if (location.hash === '#1') {
 				if (data.type == 'answer')
 					peer1.signal(data);
+				else if (data.type == 'offer')
+					document.querySelector('#outgoing').textContent = JSON.stringify(data);
 			}
 			else {
 				if (data.type == 'offer')
 					peer1.signal(data);
+				else if (data.type == 'answer')
+					document.querySelector('#outgoing').textContent = JSON.stringify(data);
 				/*else if (data.type == 'answer') {
 					var json = '{"toAnswer":' + data + '}';
 					peer1.signal(JSON.stringify(json));
@@ -34,20 +38,23 @@ $(document).ready(function(){
 
 		peer1.on('connect', function () {
 		  console.log('CONNECT')
-		  peer1.send('whatever' + Math.random())
+		  //startTracking();
 		})
 
 		peer1.on('data', function (data) {
-		  console.log('data: ' + data);
-		  //peer1.addStream(videoStream);
+		  //console.log('data: ' + data);
+		  var arr = JSON.parse(data);
+		  if (Array.isArray(arr))
+		  	drawScale(checkLocations(arr));
 		})
 
 		peer1.on('stream', function (stream){
 			console.log('onSTREAM');
 			$('#foreignVideo').prop('src', URL.createObjectURL(stream));
 		  	$('#foreignVideo').css('display','');
-		  	peer1.addStream(videoStream);
-		  	$('#foreignVideo').prop('src', URL.createObjectURL(videoStream));
+		  	$('#localVideo').prop('src', URL.createObjectURL(videoStream));
+		  	$('#localVideo').css('display','');
+		  	startTracking();
 		});
 
 		document.querySelector('form').addEventListener('submit', function (ev) {
@@ -107,7 +114,7 @@ $(document).ready(function(){
 	
 });
 
-function callFriend(){
+/*function callFriend(){
 	friendID = $("#friendid").val();
 	console.log(friendID);
 	if (friendID == ''){
@@ -136,9 +143,9 @@ function callFriend(){
 		webrtc.startLocalVideo();
 		
 	}
-}
+}*/
 
-function disconnect() {
+/*function disconnect() {
 	peer.disconnect();
 	if (dataConnection!=null)
 		dataConnection.close();
@@ -150,7 +157,7 @@ function disconnect() {
 	localCtracker.stop();
 	//localcc.clearRect(0, 0, localCanvasInput.width, localCanvasInput.height);
 	foreigncc.clearRect(0,0,340,240);
-}
+}*/
 
 function startTracking(){
 	vid = document.getElementById('localVideo');
@@ -164,11 +171,10 @@ function positionLoop() {
 	requestAnimationFrame(positionLoop);
 	localcc.clearRect(0, 0, localCanvasInput.width, localCanvasInput.height);
 	if (localCtracker.getCurrentPosition()) {
-		localCtracker.draw(localCanvasInput);
+		//localCtracker.draw(localCanvasInput);
 		myLocations=localCtracker.getCurrentPosition();
-		if (dataConnection!=null){
-			//console.log(myLocations);
-			dataConnection.send(myLocations);
+		if (peer1!==null){
+			peer1.send(JSON.stringify(myLocations));
 		}
 	}
   }
@@ -186,21 +192,28 @@ function positionLoop() {
 	  		score++;
 	  	if (Math.abs(Math.abs((myLocations[62][0] - myLocations[7][0]) + (myLocations[62][1] - myLocations[7][1])) - Math.abs((locations[62][0] - locations[7][0]) + (locations[62][1] - locations[7][1]))) <=10)
 	  		score++;*/
-	  	//console.log('My locations: ' + getAngle(myLocations));
-	  	var c=document.getElementById("foreignAngles");
+	  	$('#me').html('My angle: ' + parseFloat(getAngle(myLocations)).toFixed(2));
+	  	/*console.log('[' + myLocations[7][0] + '][' +  myLocations[7][1] + ']');
+	  	console.log('[' + myLocations[33][0] + '][' +  myLocations[33][1] + ']');
+	  	console.log('[' + locations[7][0] + '][' +  locations[7][1] + ']');
+	  	console.log('[' + locations[33][0] + '][' +  locations[33][1] + ']');*/
+	  	var c=document.getElementById("localCanvas");
 		var ctx=c.getContext("2d");
 		ctx.clearRect(0,0,400,400);
 		ctx.beginPath();
-		ctx.moveTo(locations[33][0],locations[33][1]);
-		ctx.lineTo(locations[7][0],locations[7][1]);
+		ctx.moveTo(myLocations[7][0],myLocations[7][1]);
+		ctx.lineTo(myLocations[33][0],myLocations[33][1]);
 		ctx.stroke();
-		var c=document.getElementById("foreignAngles");
+
+		$('#friend').html('Friend angle: ' + parseFloat(getAngle(locations)).toFixed(2));
+	  	var c=document.getElementById("foreignCanvas");
 		var ctx=c.getContext("2d");
 		ctx.clearRect(0,0,400,400);
 		ctx.beginPath();
-		ctx.moveTo(myLocations[33][0],myLocations[33][1]);
-		ctx.lineTo(myLocations[7][0],[7][1]);
+		ctx.moveTo(locations[7][0],locations[7][1]);
+		ctx.lineTo(locations[33][0],locations[33][1]);
 		ctx.stroke();
+		
 	}
   	return score;
   }
@@ -209,7 +222,7 @@ function positionLoop() {
   	var Vector = [];
   	Vector[0] = locations[33][0] - locations[7][0];
   	Vector[1] = locations[33][1] - locations[7][1];
-  	return Math.atan2(Vector[1] - (-1), Vector[0] - 0) * 180 / Math.PI;
+  	return Math.abs(Math.atan2(Vector[1] - (-1), Vector[0] - 0) * 180 / Math.PI);
   }
 
   function drawScale(locator){ 

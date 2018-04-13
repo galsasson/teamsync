@@ -13,44 +13,36 @@
 	<body >
 		<h1>Team Synch</h1>
 		<div class="container">
-			<div class='row'>
-				<div class="input-group mb-3">
-					<label>Please enter friend's id</label><br>
-					<input type="text" id='friendid' class="form-control">
-					<button id='call' onClick="callFriend();">call</button>
-					<button id='disconnect' onClick="disconnect();" disabled="true">Disconnect</button>
-				</div>
-			</div>
-		</div>
-		<div class="container">
 			<div class="row">
 				<div class="col-md-4">
 					<h2 id='friend'></h2>
 					<video id="foreignVideo" class ="v" width="320" height="240" autoplay="true"></video>
 					<canvas id="foreignCanvas" class="c" width="340" height="240" style="position: absolute;left: 0px;"></canvas>
+					<!-- <canvas id="foreignAngles" width="340px" height="240px" style="position: absolute;left: 0px;"></canvas> -->
 				</div>
 				<div class="col-md-4">
-					<img id='inSync' src='white.jpg' width="320" height="240">
+					<canvas id="angles" width="340px" height="240px" style="position: absolute;left: 0px;"></canvas>
 				</div>
 				<div class="col-md-4">
 					<h2 id="me"></h2>
 					<video id="localVideo" class="v" width="320" height="240" muted="true" autoplay="true" ></video>
 					<canvas id="localCanvas" class="c" width="340" height="240" style="position: absolute;left: 0px;"></canvas>
+					<!-- <canvas id="localAngles" width="340px" height="240px" style="position: absolute;left: 0px;"></canvas> -->
+				</div>
+			</div>
+		</div>
+		<div class="container">
+			<div class='row'>
+				<div class="input-group mb-3">
+					<form>
+					  <label>Send this message to your friend: </label>
+					  <pre id="outgoing"></pre>
+				      <textarea style="width:400px" id="incoming"></textarea>
+				      <button type="submit">submit</button>
+				    </form>		    
 				</div>
 			</div>
 		</div>
 		<div>
-			<div class="col-md-4">
-				<canvas id="localAngles" width="400px" height="400px"></canvas>
-			</div>
-			<div class="col-md-4">
-				<canvas id="foreignAngles" width="400px" height="400px"></canvas>
-			</div>
-		</div>
-		<form>
-      <textarea id="incoming"></textarea>
-      <button type="submit">submit</button>
-    </form>
-    <pre id="outgoing"></pre>
 	</body>
 </html>
