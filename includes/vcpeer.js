@@ -1,18 +1,63 @@
-var myId;
-var peer;
+var myId, peer1;
 var videoStream = null;
 var constraints = {audio:true,video:true};
 var mediaConnection = null,dataConnection=null,myLocations=null;
 var localCtracker,foreignCTracker, localCanvasInput, localcc,foreigncc,foreignCanvasInput;
 
 $(document).ready(function(){
-	peer = new Peer({key: 'lwjd5qra8257b9'});
-	peer.on('open', function(id) {
-		myId=id;
-		console.log(myId);
-	  $("#me").html(myId);
+	myId=makeid();
+	$("#me").html(myId);
+	//var SimplePeer = require('simple-peer')
+	//var p = new SimplePeer({ initiator: location.hash === '#1', trickle: false })
+	navigator.mediaDevices.getUserMedia(constraints)
+	  .then(function(stream) {
+		console.log("stream ready");
+		videoStream = stream;
+
+		peer1 = new SimplePeer({ initiator: location.hash === '#1', stream: videoStream });
+		peer1.on('signal', function (data) {
+			console.log(JSON.stringify(data));
+			if (location.hash === '#1') {
+				if (data.type == 'answer')
+					peer1.signal(data);
+			}
+			else {
+				if (data.type == 'offer')
+					peer1.signal(data);
+				/*else if (data.type == 'answer') {
+					var json = '{"toAnswer":' + data + '}';
+					peer1.signal(JSON.stringify(json));
+				}*/
+			}
+
+		});
+
+		peer1.on('connect', function () {
+		  console.log('CONNECT')
+		  peer1.send('whatever' + Math.random())
+		})
+
+		peer1.on('data', function (data) {
+		  console.log('data: ' + data);
+		  //peer1.addStream(videoStream);
+		})
+
+		peer1.on('stream', function (stream){
+			console.log('onSTREAM');
+			$('#foreignVideo').prop('src', URL.createObjectURL(stream));
+		  	$('#foreignVideo').css('display','');
+		  	peer1.addStream(videoStream);
+		  	$('#foreignVideo').prop('src', URL.createObjectURL(videoStream));
+		});
+
+		document.querySelector('form').addEventListener('submit', function (ev) {
+			console.log(peer1);
+			ev.preventDefault()
+			peer1.signal(JSON.parse(document.querySelector('#incoming').value))
+		});
 	});
-	peer.on('call', function(call) {
+	
+	/*peer.on('call', function(call) {
 	  // Answer the call, providing our mediaStream
 	  navigator.mediaDevices.getUserMedia(constraints)
 	  .then(function(stream) {
@@ -53,7 +98,8 @@ $(document).ready(function(){
 	});
 	peer.on('disconnected',function(){
 		disconnect();
-	});
+	});*/
+
 	localCanvasInput = document.getElementById('localCanvas');
 	localcc = localCanvasInput.getContext('2d');
 	foreignCanvasInput = document.getElementById('foreignCanvas');
@@ -63,25 +109,32 @@ $(document).ready(function(){
 
 function callFriend(){
 	friendID = $("#friendid").val();
-	try{
-		navigator.mediaDevices.getUserMedia(constraints)
-		.then(function(stream) {
-		  console.log("stream ready");
-		  videoStream = stream;
-		  console.log('calling');
-		   $('#localVideo').prop('src', URL.createObjectURL(videoStream));
-		   	dataConnection = peer.connect(friendID);
-		   	dataConnection.on('data', function(data){
-		   		drawScale(checkLocations(data));
-		   	});
-			mediaConnection = peer.call(friendID,videoStream);
-			$('#call').prop('disabled',true);
-			$('#disconnect').prop('disabled',false);
+	console.log(friendID);
+	if (friendID == ''){
+		try{
+			navigator.mediaDevices.getUserMedia(constraints)
+			.then(function(stream) {
+			  console.log("stream ready");
+			  videoStream = stream;
+			  console.log('calling');
+			   $('#localVideo').prop('src', URL.createObjectURL(videoStream));
+				
+				  // you can name it anything
+				  webrtc.joinRoom(friendID);
+				  webrtc.startLocalVideo();
+				$('#call').prop('disabled',true);
+				$('#disconnect').prop('disabled',false);
 
-		});
+			});
+		}
+		catch(err){
+			console.log(err.message);
+		}
 	}
-	catch(err){
-		console.log(err.message);
+	else{
+		webrtc.joinRoom(myId);
+		webrtc.startLocalVideo();
+		
 	}
 }
 
@@ -109,9 +162,9 @@ function startTracking(){
 }
 function positionLoop() {
 	requestAnimationFrame(positionLoop);
-	//localcc.clearRect(0, 0, localCanvasInput.width, localCanvasInput.height);
+	localcc.clearRect(0, 0, localCanvasInput.width, localCanvasInput.height);
 	if (localCtracker.getCurrentPosition()) {
-		//localCtracker.draw(localCanvasInput);
+		localCtracker.draw(localCanvasInput);
 		myLocations=localCtracker.getCurrentPosition();
 		if (dataConnection!=null){
 			//console.log(myLocations);
@@ -123,7 +176,7 @@ function positionLoop() {
   function checkLocations(locations){
   	var score = 0;
   	if (myLocations!=null && myLocations!=undefined){
-	  	if (Math.abs(Math.abs((myLocations[62][0] - myLocations[1][0]) + (myLocations[1][1] - myLocations[62][1])) - Math.abs((locations[62][0] - locations[1][0]) + (locations[1][1] - locations[62][1]))) <=10)
+	  	/*if (Math.abs(Math.abs((myLocations[62][0] - myLocations[1][0]) + (myLocations[1][1] - myLocations[62][1])) - Math.abs((locations[62][0] - locations[1][0]) + (locations[1][1] - locations[62][1]))) <=10)
 	  		score++;
 	  	if (Math.abs(Math.abs((myLocations[13][0] - myLocations[62][0]) + (myLocations[13][1] - myLocations[62][1])) - Math.abs((locations[13][0] - locations[62][0]) + (locations[13][1] - locations[62][1]))) <=10)
 	  		score++;
@@ -132,10 +185,31 @@ function positionLoop() {
 	  	if (Math.abs(Math.abs((myLocations[16][0] - myLocations[62][0]) + (myLocations[16][1] - myLocations[62][1])) - Math.abs((locations[16][0] - locations[62][0]) + (locations[16][1] - locations[62][1]))) <=10)
 	  		score++;
 	  	if (Math.abs(Math.abs((myLocations[62][0] - myLocations[7][0]) + (myLocations[62][1] - myLocations[7][1])) - Math.abs((locations[62][0] - locations[7][0]) + (locations[62][1] - locations[7][1]))) <=10)
-	  		score++;
-	  	
+	  		score++;*/
+	  	//console.log('My locations: ' + getAngle(myLocations));
+	  	var c=document.getElementById("foreignAngles");
+		var ctx=c.getContext("2d");
+		ctx.clearRect(0,0,400,400);
+		ctx.beginPath();
+		ctx.moveTo(locations[33][0],locations[33][1]);
+		ctx.lineTo(locations[7][0],locations[7][1]);
+		ctx.stroke();
+		var c=document.getElementById("foreignAngles");
+		var ctx=c.getContext("2d");
+		ctx.clearRect(0,0,400,400);
+		ctx.beginPath();
+		ctx.moveTo(myLocations[33][0],myLocations[33][1]);
+		ctx.lineTo(myLocations[7][0],[7][1]);
+		ctx.stroke();
 	}
   	return score;
+  }
+
+  function getAngle(locations) {
+  	var Vector = [];
+  	Vector[0] = locations[33][0] - locations[7][0];
+  	Vector[1] = locations[33][1] - locations[7][1];
+  	return Math.atan2(Vector[1] - (-1), Vector[0] - 0) * 180 / Math.PI;
   }
 
   function drawScale(locator){ 
@@ -153,8 +227,20 @@ function positionLoop() {
 		cx=(locator)*(-75),
 		ch=240+(locator*150),
 		cy=(locator)*(-75);
-	foreigncc.clearRect(cx,cy,cw,ch);
-	foreigncc.drawImage(img,cx,cy,cw,ch);
+	//foreigncc.clearRect(cx,cy,cw,ch);
+	//foreigncc.drawImage(img,cx,cy,cw,ch);
   }
+
+  function makeid() {
+	  var text = "";
+	  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+	  for (var i = 0; i < 5; i++)
+	    text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+	  return text;
+	}
+
+	console.log(makeid());
 
   
