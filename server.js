@@ -11,8 +11,8 @@ app.get('/',function(req,res){
   //It will find and locate index.html from View or Scripts
 });
 
-app.listen(8080);
+app.listen(3001);
 
-console.log("Running at Port 8080");
+console.log("Running at Port 3001");
 
 //require('./router');
