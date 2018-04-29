@@ -1,4 +1,4 @@
-var myId, peer1;
+var myId, peer1 = null;
 var videoStream = null;
 var constraints = {audio:true,video:true};
 var mediaConnection = null,dataConnection=null,myLocations=null;
@@ -38,7 +38,7 @@ $(document).ready(function(){
 
 		peer1.on('connect', function () {
 		  console.log('CONNECT')
-		  //startTracking();
+		  startTracking();
 		})
 
 		peer1.on('data', function (data) {
@@ -54,7 +54,7 @@ $(document).ready(function(){
 		  	$('#foreignVideo').css('display','');
 		  	$('#localVideo').prop('src', URL.createObjectURL(videoStream));
 		  	$('#localVideo').css('display','');
-		  	startTracking();
+	//	  	startTracking();
 		});
 
 		document.querySelector('form').addEventListener('submit', function (ev) {
@@ -168,15 +168,15 @@ function startTracking(){
 	positionLoop();
 }
 function positionLoop() {
-	requestAnimationFrame(positionLoop);
 	localcc.clearRect(0, 0, localCanvasInput.width, localCanvasInput.height);
 	if (localCtracker.getCurrentPosition()) {
 		//localCtracker.draw(localCanvasInput);
 		myLocations=localCtracker.getCurrentPosition();
-		if (peer1!==null){
+		if (peer1!=null){
 			peer1.send(JSON.stringify(myLocations));
 		}
 	}
+	requestAnimationFrame(positionLoop);
   }
 
   function checkLocations(locations){
