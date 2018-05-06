@@ -7,105 +7,58 @@ var localCtracker,foreignCTracker, localCanvasInput, localcc,foreigncc,foreignCa
 $(document).ready(function(){
 	myId=makeid();
 	$("#me").html(myId);
-	//var SimplePeer = require('simple-peer')
-	//var p = new SimplePeer({ initiator: location.hash === '#1', trickle: false })
 	navigator.mediaDevices.getUserMedia(constraints)
 	  .then(function(stream) {
 		console.log("stream ready");
 		videoStream = stream;
+	  	$('#localVideo').prop('srcObject', videoStream);
 
-		peer1 = new SimplePeer({ initiator: location.hash === '#1', stream: videoStream });
+		peer1 = new SimplePeer({ initiator: location.hash === '#1', stream: videoStream, trickle: false });
 		peer1.on('signal', function (data) {
+			console.log('******   SIGNAL');
 			console.log(JSON.stringify(data));
 			if (location.hash === '#1') {
-				if (data.type == 'answer')
-					peer1.signal(data);
-				else if (data.type == 'offer')
+				if (data.type == 'offer') {
 					document.querySelector('#outgoing').textContent = JSON.stringify(data);
+				}
 			}
 			else {
-				if (data.type == 'offer')
-					peer1.signal(data);
-				else if (data.type == 'answer')
+				if (data.type == 'answer') {
 					document.querySelector('#outgoing').textContent = JSON.stringify(data);
-				/*else if (data.type == 'answer') {
-					var json = '{"toAnswer":' + data + '}';
-					peer1.signal(JSON.stringify(json));
-				}*/
+				}
 			}
 
 		});
 
 		peer1.on('connect', function () {
-		  console.log('CONNECT')
+		  console.log('******  CONNECT');
 		  startTracking();
 		})
 
 		peer1.on('data', function (data) {
-		  //console.log('data: ' + data);
-		  var arr = JSON.parse(data);
-		  if (Array.isArray(arr))
-		  	drawScale(checkLocations(arr));
-		})
+			// console.log('******  DATA')
+		  	var arr = JSON.parse(data);
+		  	if (Array.isArray(arr)) {
+		  		drawScale(checkLocations(arr));
+		  	}
+		});
 
 		peer1.on('stream', function (stream){
-			console.log('onSTREAM');
-			$('#foreignVideo').prop('src', URL.createObjectURL(stream));
-		  	$('#foreignVideo').css('display','');
-		  	$('#localVideo').prop('src', URL.createObjectURL(videoStream));
-		  	$('#localVideo').css('display','');
-	//	  	startTracking();
+			console.log('******  STREAM');
+			$('#foreignVideo').prop('srcObject', stream);
+		});
+
+		peer1.on('error', function (err) {
+			console.log('****** ERROR');
+			console.log(err);
 		});
 
 		document.querySelector('form').addEventListener('submit', function (ev) {
-			console.log(peer1);
 			ev.preventDefault()
 			peer1.signal(JSON.parse(document.querySelector('#incoming').value))
 		});
 	});
 	
-	/*peer.on('call', function(call) {
-	  // Answer the call, providing our mediaStream
-	  navigator.mediaDevices.getUserMedia(constraints)
-	  .then(function(stream) {
-		console.log("stream ready");
-		videoStream = stream;
-		$('#localVideo').prop('src', URL.createObjectURL(videoStream));
-	  	call.answer(videoStream);
-	  	call.on('close', function(){
-	  		disconnect();
-	  		peer.disconnect();
-	  	})
-	  	call.on('stream', function(stream) {
-	  	//mediaConnection.answer([stream]);
-	  	// `stream` is the MediaStream of the remote peer.
-	  	// Here you'd add it to an HTML video/canvas element.
-		  	$('#foreignVideo').prop('src', URL.createObjectURL(stream));
-		  	$('#foreignVideo').css('display','');
-		  	if (mediaConnection == null)
-				mediaConnection = peer.call(call.peer,videoStream);
-			$('#call').prop('disabled',true);
-			$('#disconnect').prop('disabled',false);
-			$('#friend').html(call.peer);
-		if (mediaConnection!=null && videoStream!=null)
-			startTracking();
-		});
-	  });
-	});
-	peer.on('connection', function(conn) { 
-		console.log('incoming connection');
-		conn.on('data',function(data){
-			//locator = (checkLocations(data) * 10)/71;
-			drawScale(checkLocations(data));
-		});
-		conn.on('close', function(){
-			disconnect();
-		});
-		dataConnection = conn;
-	});
-	peer.on('disconnected',function(){
-		disconnect();
-	});*/
 
 	localCanvasInput = document.getElementById('localCanvas');
 	localcc = localCanvasInput.getContext('2d');
@@ -113,51 +66,6 @@ $(document).ready(function(){
 	foreigncc = foreignCanvasInput.getContext('2d');
 	
 });
-
-/*function callFriend(){
-	friendID = $("#friendid").val();
-	console.log(friendID);
-	if (friendID == ''){
-		try{
-			navigator.mediaDevices.getUserMedia(constraints)
-			.then(function(stream) {
-			  console.log("stream ready");
-			  videoStream = stream;
-			  console.log('calling');
-			   $('#localVideo').prop('src', URL.createObjectURL(videoStream));
-				
-				  // you can name it anything
-				  webrtc.joinRoom(friendID);
-				  webrtc.startLocalVideo();
-				$('#call').prop('disabled',true);
-				$('#disconnect').prop('disabled',false);
-
-			});
-		}
-		catch(err){
-			console.log(err.message);
-		}
-	}
-	else{
-		webrtc.joinRoom(myId);
-		webrtc.startLocalVideo();
-		
-	}
-}*/
-
-/*function disconnect() {
-	peer.disconnect();
-	if (dataConnection!=null)
-		dataConnection.close();
-	$('#localVideo').prop('hidden', true);
-	$('#foreignVideo').prop('hidden', true);
-	videoStream.getTracks()[0].stop();
-	mediaConnection = null;
-	dataConnection = null;
-	localCtracker.stop();
-	//localcc.clearRect(0, 0, localCanvasInput.width, localCanvasInput.height);
-	foreigncc.clearRect(0,0,340,240);
-}*/
 
 function startTracking(){
 	vid = document.getElementById('localVideo');
@@ -226,7 +134,7 @@ function positionLoop() {
   }
 
   function drawScale(locator){ 
-  	console.log(locator);
+  	//console.log(locator);
   	if (isNaN(locator)){
   		console.log('nan');
   		return;
