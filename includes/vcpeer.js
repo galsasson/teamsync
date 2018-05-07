@@ -4,6 +4,24 @@ var constraints = {audio:true,video:true};
 var mediaConnection = null,dataConnection=null,myLocations=null;
 var localCtracker,foreignCTracker, localCanvasInput, localcc,foreigncc,foreignCanvasInput;
 
+
+var peerOpts = {
+    trickle: false,
+    config: {
+      iceServers: [
+      	{
+      		url:'stun:stun.l.google.com:19302'
+      	},
+      	{
+			url: 'turn:13.250.13.83:3478?transport=udp',
+			username: 'YzYNCouZM1mhqhmseWk6',
+			credential: 'YzYNCouZM1mhqhmseWk6'
+		}
+      ]
+    }
+};
+
+
 $(document).ready(function(){
 	myId=makeid();
 	$("#me").html(myId);
@@ -13,7 +31,12 @@ $(document).ready(function(){
 		videoStream = stream;
 	  	$('#localVideo').prop('srcObject', videoStream);
 
-		peer1 = new SimplePeer({ initiator: location.hash === '#1', stream: videoStream, trickle: false });
+	  	peerOpts.stream = videoStream;
+	  	peerOpts.initiator = (location.hash === '#1');
+	  	console.log('initiator: '+peerOpts.initiator);
+
+		peer1 = new SimplePeer(peerOpts);
+
 		peer1.on('signal', function (data) {
 			console.log('******   SIGNAL');
 			console.log(JSON.stringify(data));
