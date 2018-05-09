@@ -10,13 +10,13 @@ var peerOpts = {
     config: {
       iceServers: [
       	{
-      		url:'stun:stun.l.google.com:19302'
+      		url:'stun:teamsync.shenkar.ac.il'
       	},
       	{
-			url: 'turn:13.250.13.83:3478?transport=udp',
-			username: 'YzYNCouZM1mhqhmseWk6',
-			credential: 'YzYNCouZM1mhqhmseWk6'
-		}
+		url: 'turn:teamsync.shenkar.ac.il:3478?transport=udp',
+		username: 'test',
+		credential: 'test'
+	}
       ]
     }
 };
