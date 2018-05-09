@@ -7,6 +7,7 @@ var localCtracker,foreignCTracker, localCanvasInput, localcc,foreigncc,foreignCa
 
 var peerOpts = {
     trickle: false,
+    initiator: false,
     config: {
       iceServers: [
       	{
@@ -27,14 +28,41 @@ $(document).ready(function(){
 	$("#me").html(myId);
 	navigator.mediaDevices.getUserMedia(constraints)
 	  .then(function(stream) {
+
+	  	// Set local stream
 		console.log("stream ready");
 		videoStream = stream;
 	  	$('#localVideo').prop('srcObject', videoStream);
 
-	  	peerOpts.stream = videoStream;
-	  	peerOpts.initiator = (location.hash === '#1');
-	  	console.log('initiator: '+peerOpts.initiator);
+	  	// Connect to socket.io server
+		var socket = io.connect('localhost:3001');
+		console.log(socket);
+		room = getParameterByName('room');
+		if (room != null) {
+			console.log('joining room '+room);
+			socket.emit('create or join', room);
+		}
 
+		socket.on('created', function(room) {
+  			peerOpts.initiator = true;
+			console.log('Created room: '+room);
+		});
+
+		socket.on('join', function (room){
+  			console.log('You are the initiator, a peer has joined room ' + room);
+		});
+
+		socket.on('full', function (room){
+  			console.log('Room ' + room + ' is full');
+		});
+
+		socket.on('log', function (array){
+  			console.log.apply(console, array);
+		});
+
+		// setup simple peer connection
+	  	peerOpts.stream = videoStream;
+	  	console.log('initiator: '+peerOpts.initiator);
 		peer1 = new SimplePeer(peerOpts);
 
 		peer1.on('signal', function (data) {
@@ -108,9 +136,9 @@ function positionLoop() {
 		}
 	}
 	requestAnimationFrame(positionLoop);
-  }
+}
 
-  function checkLocations(locations){
+function checkLocations(locations){
   	var score = 0;
   	if (myLocations!=null && myLocations!=undefined){
 	  	/*if (Math.abs(Math.abs((myLocations[62][0] - myLocations[1][0]) + (myLocations[1][1] - myLocations[62][1])) - Math.abs((locations[62][0] - locations[1][0]) + (locations[1][1] - locations[62][1]))) <=10)
@@ -149,14 +177,14 @@ function positionLoop() {
   	return score;
   }
 
-  function getAngle(locations) {
+function getAngle(locations) {
   	var Vector = [];
   	Vector[0] = locations[33][0] - locations[7][0];
   	Vector[1] = locations[33][1] - locations[7][1];
   	return Math.abs(Math.atan2(Vector[1] - (-1), Vector[0] - 0) * 180 / Math.PI);
-  }
+}
 
-  function drawScale(locator){ 
+function drawScale(locator){ 
   	//console.log(locator);
   	if (isNaN(locator)){
   		console.log('nan');
@@ -173,18 +201,28 @@ function positionLoop() {
 		cy=(locator)*(-75);
 	//foreigncc.clearRect(cx,cy,cw,ch);
 	//foreigncc.drawImage(img,cx,cy,cw,ch);
-  }
+}
 
-  function makeid() {
-	  var text = "";
-	  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+function makeid() {
+	var text = "";
+	var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-	  for (var i = 0; i < 5; i++)
-	    text += possible.charAt(Math.floor(Math.random() * possible.length));
+	for (var i = 0; i < 5; i++)
+		text += possible.charAt(Math.floor(Math.random() * possible.length));
+  	return text;
+}
 
-	  return text;
-	}
+console.log(makeid());
 
-	console.log(makeid());
+
+function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
 
   
