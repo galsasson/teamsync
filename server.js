@@ -36,6 +36,18 @@ io.sockets.on('connection', function (socket){
     socket.broadcast.emit('message', message);
   });
 
+  // signal is { room:<room>, data:<data> }
+  socket.on('signal', function(sig) {
+  	var room = sig.room;
+  	var data = sig.data;
+  	for (s in io.sockets.adapter.rooms[room].sockets) {
+  		if (s != socket.id) {
+  			console.log('sending to: '+s);
+  			io.to(s).emit('signal', data);
+  		}
+  	}
+  })
+
   socket.on('create or join', function (room) {
   	var roomArr = io.sockets.adapter.rooms[room];
   	var numClients = (roomArr===undefined)?0:roomArr.length;
@@ -48,14 +60,13 @@ io.sockets.on('connection', function (socket){
       socket.join(room);
       socket.emit('created', room);
     } else if (numClients === 1) {
-      io.sockets.in(room).emit('join', room);
       socket.join(room);
-      socket.emit('joined', room);
+      io.sockets.in(room).emit('join', room);
     } else { // max two clients
       socket.emit('full', room);
     }
-    socket.emit('emit(): client ' + socket.id + ' joined room ' + room);
-    socket.broadcast.emit('broadcast(): client ' + socket.id + ' joined room ' + room);
+    // socket.emit('emit(): client ' + socket.id + ' joined room ' + room);
+    // socket.broadcast.emit('broadcast(): client ' + socket.id + ' joined room ' + room);
 
   });
 

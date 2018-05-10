@@ -6,9 +6,9 @@ var localCtracker,foreignCTracker, localCanvasInput, localcc,foreigncc,foreignCa
 
 
 var peerOpts = {
-    trickle: false,
-    initiator: false,
-    config: {
+    trickle: true,
+    initiator: false
+/*    ,config: {
       iceServers: [
       	{
       		url:'stun:teamsync.shenkar.ac.il'
@@ -19,7 +19,7 @@ var peerOpts = {
 		credential: 'test'
 	}
       ]
-    }
+    }*/
 };
 
 
@@ -48,8 +48,73 @@ $(document).ready(function(){
 			console.log('Created room: '+room);
 		});
 
+		socket.on('signal', function(data) {
+			peer1.signal(data);
+		});
+
 		socket.on('join', function (room){
-  			console.log('You are the initiator, a peer has joined room ' + room);
+			if (peerOpts.initiator) {
+  				console.log('You are the initiator, a peer has joined room ' + room);
+
+  				// Call the other peer
+			}
+			else {
+  				console.log('You joined room '+room+', an initiator will send a call');
+
+  				// Wait for initiator to call
+			}
+
+			// setup simple peer connection
+			console.log('Setting up simplePeer, initiator = '+peerOpts.initiator);
+
+		  	peerOpts.stream = videoStream;
+			peer1 = new SimplePeer(peerOpts);
+
+			peer1.on('signal', function (data) {
+				console.log('******   SIGNAL');
+				console.log(JSON.stringify(data));
+				
+
+				var sig = { room: room, data: data};
+				socket.emit('signal', sig);
+
+
+				if (location.hash === '#1') {
+					if (data.type == 'offer') {
+						document.querySelector('#outgoing').textContent = JSON.stringify(data);
+					}
+				}
+				else {
+					if (data.type == 'answer') {
+						document.querySelector('#outgoing').textContent = JSON.stringify(data);
+					}
+				}
+
+			});
+
+			peer1.on('connect', function () {
+			  console.log('******  CONNECT');
+			  startTracking();
+			})
+
+			peer1.on('data', function (data) {
+				// console.log('******  DATA')
+			  	var arr = JSON.parse(data);
+			  	if (Array.isArray(arr)) {
+			  		drawScale(checkLocations(arr));
+			  	}
+			});
+
+			peer1.on('stream', function (stream){
+				console.log('******  STREAM');
+				$('#foreignVideo').prop('srcObject', stream);
+			});
+
+			peer1.on('error', function (err) {
+				console.log('****** ERROR');
+				console.log(err);
+			});
+
 		});
 
 		socket.on('full', function (room){
@@ -58,50 +123,6 @@ $(document).ready(function(){
 
 		socket.on('log', function (array){
   			console.log.apply(console, array);
-		});
-
-		// setup simple peer connection
-	  	peerOpts.stream = videoStream;
-	  	console.log('initiator: '+peerOpts.initiator);
-		peer1 = new SimplePeer(peerOpts);
-
-		peer1.on('signal', function (data) {
-			console.log('******   SIGNAL');
-			console.log(JSON.stringify(data));
-			if (location.hash === '#1') {
-				if (data.type == 'offer') {
-					document.querySelector('#outgoing').textContent = JSON.stringify(data);
-				}
-			}
-			else {
-				if (data.type == 'answer') {
-					document.querySelector('#outgoing').textContent = JSON.stringify(data);
-				}
-			}
-
-		});
-
-		peer1.on('connect', function () {
-		  console.log('******  CONNECT');
-		  startTracking();
-		})
-
-		peer1.on('data', function (data) {
-			// console.log('******  DATA')
-		  	var arr = JSON.parse(data);
-		  	if (Array.isArray(arr)) {
-		  		drawScale(checkLocations(arr));
-		  	}
-		});
-
-		peer1.on('stream', function (stream){
-			console.log('******  STREAM');
-			$('#foreignVideo').prop('srcObject', stream);
-		});
-
-		peer1.on('error', function (err) {
-			console.log('****** ERROR');
-			console.log(err);
 		});
 
 		document.querySelector('form').addEventListener('submit', function (ev) {
