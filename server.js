@@ -1,5 +1,5 @@
-var httpPort = 3000;
-var socketPort = 3001;
+var httpPort = 8080;
+var socketPort = 3000;
 
 var express = require('express');
 var app = express();
@@ -7,9 +7,7 @@ var server = require('http').Server(app);
 var io = require('socket.io')(socketPort);
 
 app.use(express.static(__dirname + '/videochat'));
-//Store all HTML files in view folder.
 app.use(express.static(__dirname + '/includes'));
-//Store all JS and CSS in Scripts folder.
 
 app.get('/',function(req,res){
   res.sendFile('index.html');
@@ -30,19 +28,15 @@ io.sockets.on('connection', function (socket){
       socket.emit('log', array);
   }
 
-  socket.on('message', function (message) {
-    log('Got message:', message);
-    // for a real app, would be room only (not broadcast)
-    socket.broadcast.emit('message', message);
-  });
-
-  // signal is { room:<room>, data:<data> }
+  // signal message used to signal connection data between clients
+  // signal format: { room:<room>, data:<data> }
   socket.on('signal', function(sig) {
   	var room = sig.room;
   	var data = sig.data;
+
+    // send signal data only to the other peer
   	for (s in io.sockets.adapter.rooms[room].sockets) {
   		if (s != socket.id) {
-  			console.log('sending to: '+s);
   			io.to(s).emit('signal', data);
   		}
   	}
@@ -65,14 +59,9 @@ io.sockets.on('connection', function (socket){
     } else { // max two clients
       socket.emit('full', room);
     }
-    // socket.emit('emit(): client ' + socket.id + ' joined room ' + room);
-    // socket.broadcast.emit('broadcast(): client ' + socket.id + ' joined room ' + room);
-
   });
-
 });
 
 
 console.log('Serving HTTP on port '+httpPort+', Socket.io on port '+socketPort);
 
-//require('./router');

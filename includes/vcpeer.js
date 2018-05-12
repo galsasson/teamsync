@@ -4,6 +4,9 @@ var constraints = {audio:true,video:true};
 var mediaConnection = null,dataConnection=null,myLocations=null;
 var localCtracker,foreignCTracker, localCanvasInput, localcc,foreigncc,foreignCanvasInput;
 
+// when running locally socketioLocation should be set to localhost:3000
+var socketioLocation = "localhost:3000";						// local
+// var socketioLocation = 'https://teamsync.shenkar.ac.il'		// for server
 
 var peerOpts = {
     trickle: true,
@@ -35,11 +38,11 @@ $(document).ready(function(){
 	  	$('#localVideo').prop('srcObject', videoStream);
 
 	  	// Connect to socket.io server
-		var socket = io.connect('localhost:3001');
+		var socket = io.connect(socketioLocation);
 		console.log(socket);
 		room = getParameterByName('room');
 		if (room != null) {
-			console.log('joining room '+room);
+			console.log('creating or joining room '+room);
 			socket.emit('create or join', room);
 		}
 
@@ -55,7 +58,6 @@ $(document).ready(function(){
 		socket.on('join', function (room){
 			if (peerOpts.initiator) {
   				console.log('You are the initiator, a peer has joined room ' + room);
-
   				// Call the other peer
 			}
 			else {
