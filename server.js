@@ -6,8 +6,8 @@ var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(socketPort);
 
-app.use(express.static(__dirname + '/videochat'));
-app.use(express.static(__dirname + '/includes'));
+
+app.use(express.static(__dirname + '/client'));
 
 app.get('/',function(req,res){
   res.sendFile('index.html');

@@ -1,6 +1,6 @@
 var myId, peer1 = null;
 var videoStream = null;
-var constraints = {audio:true,video:true};
+var constraints = {audio:false,video:true};
 var mediaConnection = null,dataConnection=null,myLocations=null;
 var localCtracker,foreignCTracker, localCanvasInput, localcc,foreigncc,foreignCanvasInput;
 
@@ -75,23 +75,7 @@ $(document).ready(function(){
 			peer1.on('signal', function (data) {
 				console.log('******   SIGNAL');
 				console.log(JSON.stringify(data));
-				
-
-				var sig = { room: room, data: data};
-				socket.emit('signal', sig);
-
-
-				if (location.hash === '#1') {
-					if (data.type == 'offer') {
-						document.querySelector('#outgoing').textContent = JSON.stringify(data);
-					}
-				}
-				else {
-					if (data.type == 'answer') {
-						document.querySelector('#outgoing').textContent = JSON.stringify(data);
-					}
-				}
-
+				socket.emit('signal', { room: room, data: data});
 			});
 
 			peer1.on('connect', function () {
@@ -103,7 +87,8 @@ $(document).ready(function(){
 				// console.log('******  DATA')
 			  	var arr = JSON.parse(data);
 			  	if (Array.isArray(arr)) {
-			  		drawScale(checkLocations(arr));
+			  		checkLocations(arr);
+			  		// drawScale(checkLocations(arr));
 			  	}
 			});
 
@@ -125,11 +110,6 @@ $(document).ready(function(){
 
 		socket.on('log', function (array){
   			console.log.apply(console, array);
-		});
-
-		document.querySelector('form').addEventListener('submit', function (ev) {
-			ev.preventDefault()
-			peer1.signal(JSON.parse(document.querySelector('#incoming').value))
 		});
 	});
 	
@@ -234,9 +214,6 @@ function makeid() {
 		text += possible.charAt(Math.floor(Math.random() * possible.length));
   	return text;
 }
-
-console.log(makeid());
-
 
 function getParameterByName(name, url) {
     if (!url) url = window.location.href;
