@@ -29,6 +29,9 @@ var peerOpts = {
 			username: 'usertest',
 			credential: 'passwordtest'
 		},
+      	{
+      		url:'stun:stun.l.google.com:19302'
+      	},
 		{
 			"url": 'turn:13.250.13.83:3478?transport=udp',
 			"username": "YzYNCouZM1mhqhmseWk6",
