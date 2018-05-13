@@ -1,8 +1,7 @@
 var myId, peer1 = null;
 var videoStream = null;
 var constraints = {audio:false,video:true};
-var mediaConnection = null,dataConnection=null,myLocations=null;
-var localCtracker=null,foreignCTracker, localCanvasInput, localcc,foreigncc,foreignCanvasInput;
+var localCtracker=null,remoteCTracker=null;
 var appWidth = 640;
 var appHeight = 480;
 var appCanvas = null;
@@ -13,24 +12,25 @@ var bConnected = false;
 var lastRemotePoints = null;
 
 // when running locally socketioLocation should be set to localhost:3000
-var socketioLocation = "localhost:3000";						// local
-// var socketioLocation = 'https://teamsync.shenkar.ac.il'		// for server
+// var socketioLocation = "localhost:3000";						// local
+var socketioLocation = 'https://teamsync.shenkar.ac.il'		// for server
 
 var peerOpts = {
     trickle: true,
     initiator: false
-/*    ,config: {
+    ,config: 
+    {
       iceServers: [
       	{
       		url:'stun:teamsync.shenkar.ac.il'
       	},
       	{
-		url: 'turn:teamsync.shenkar.ac.il:3478?transport=udp',
-		username: 'test',
-		credential: 'test'
-	}
+			url: 'turn:teamsync.shenkar.ac.il:3478?transport=udp',
+			username: 'usertest',
+			credential: 'passwordtest'
+		}
       ]
-    }*/
+    }
 };
 
 
@@ -98,12 +98,10 @@ $(document).ready(function(){
 			})
 
 			peer1.on('data', function (data) {
-			  	var arr = JSON.parse(data);
-			  	if (Array.isArray(arr)) {
-			  		lastRemotePoints = arr;
-			  		// Got remote face points
-			  		// checkLocations();
-			  	}
+			  	// var arr = JSON.parse(data);
+			  	// if (Array.isArray(arr)) {
+			  		// lastRemotePoints = arr;
+			  	// }
 			});
 
 			peer1.on('stream', function (stream){
@@ -126,13 +124,7 @@ $(document).ready(function(){
   			console.log.apply(console, array);
 		});
 	});
-	
 
-	localCanvasInput = document.getElementById('localCanvas');
-	//localcc = localCanvasInput.getContext('2d');
-	foreignCanvasInput = document.getElementById('foreignCanvas');
-	//foreigncc = foreignCanvasInput.getContext('2d');
-	
 });
 
 function renderLoop() {
@@ -145,7 +137,10 @@ function renderLoop() {
 		appContext.translate(appWidth, 0);
 		appContext.scale(-1, 1);
 		appContext.drawImage(remoteVideo, 0, 0, appWidth, appHeight);
-		drawFaceTrack(lastRemotePoints);
+		if (remoteCTracker != null) {
+			var remoteFace = remoteCTracker.getCurrentPosition();
+			drawFaceTrack(remoteFace);
+		}
 		appContext.restore();
 	}
 	else {
@@ -162,11 +157,11 @@ function renderLoop() {
 
 		// Track face
 		if (localCtracker != null) {
-			myLocations=localCtracker.getCurrentPosition();
-			drawFaceTrack(myLocations);
-			if (myLocations && bConnected) {
+			var localFace=localCtracker.getCurrentPosition();
+			drawFaceTrack(localFace);
+			if (Array.isArray(localFace) && bConnected) {
 				// Send face points
-				peer1.send(JSON.stringify(myLocations));
+				peer1.send(JSON.stringify(localFace));
 			}
 		}
 		appContext.restore();
@@ -180,7 +175,7 @@ function renderLoop() {
 
 function drawFaceTrack(points)
 {
-	if (points==null || points==undefined || points[0]==null)
+	if (!Array.isArray(points))
 		return;
 
 	// Draw face points
@@ -205,6 +200,10 @@ function startTracking(){
 	localCtracker = new clm.tracker();
 	localCtracker.init();
 	localCtracker.start(localVideo);
+
+	remoteCTracker = new clm.tracker();
+	remoteCTracker.init();
+	remoteCTracker.start(remoteVideo);
 }
 
 function getAngle(locations) {
