@@ -1,15 +1,20 @@
+// Settings
+var appWidth = 640;
+var appHeight = 480;
+var bShareFaceTracking = true;
+
+// State
 var myId, peer1 = null;
 var videoStream = null;
 var constraints = {audio:false,video:true};
 var localCtracker=null,remoteCTracker=null;
-var appWidth = 640;
-var appHeight = 480;
 var appCanvas = null;
 var appContext = null;
 var localVideo = null;
 var remoteVideo = null;
 var bConnected = false;
 var lastRemotePoints = null;
+
 
 // when running locally socketioLocation should be set to localhost:3000
 // var socketioLocation = "localhost:3000";						// local
@@ -105,12 +110,16 @@ $(document).ready(function(){
 			  // startTracking();
 			})
 
-			peer1.on('data', function (data) {
-			  	// var arr = JSON.parse(data);
-			  	// if (Array.isArray(arr)) {
-			  		// lastRemotePoints = arr;
-			  	// }
-			});
+			if (bShareFaceTracking) {
+				peer1.on('data', function (data) {
+			  		var msg = JSON.parse(data);
+			  		if (msg.type === 'face') {
+			  			if (Array.isArray(msg.data)) {
+			  				lastRemotePoints = msg.data;
+			  			}
+			  		}
+				});
+			}
 
 			peer1.on('stream', function (stream){
 				console.log('******  STREAM');
@@ -145,9 +154,18 @@ function renderLoop() {
 		appContext.translate(appWidth, 0);
 		appContext.scale(-1, 1);
 		appContext.drawImage(remoteVideo, 0, 0, appWidth, appHeight);
-		if (remoteCTracker != null) {
-			var remoteFace = remoteCTracker.getCurrentPosition();
-			drawFaceTrack(remoteFace);
+		if (bShareFaceTracking) {
+			// Draw the shared face points of the remote peer
+			if (Array.isArray(lastRemotePoints)) {
+				drawFaceTrack(lastRemotePoints);				
+			}
+		}
+		else {
+			// Track the face of the remote peer ourselves
+			if (remoteCTracker != null) {
+				var remoteFace = remoteCTracker.getCurrentPosition();
+				drawFaceTrack(remoteFace);
+			}
 		}
 		appContext.restore();
 	}
@@ -167,9 +185,11 @@ function renderLoop() {
 		if (localCtracker != null) {
 			var localFace=localCtracker.getCurrentPosition();
 			drawFaceTrack(localFace);
-			if (Array.isArray(localFace) && bConnected) {
-				// Send face points
-				peer1.send(JSON.stringify(localFace));
+			if (bShareFaceTracking) {
+				if (Array.isArray(localFace) && bConnected) {
+					// Send face points
+					peer1.send(JSON.stringify({type:'face',data:localFace}));
+				}
 			}
 		}
 		appContext.restore();
