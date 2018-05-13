@@ -141,8 +141,12 @@ function renderLoop() {
 
 	// Draw remote video
 	if (remoteVideo != null) {
+		appContext.save();
+		appContext.translate(appWidth, 0);
+		appContext.scale(-1, 1);
 		appContext.drawImage(remoteVideo, 0, 0, appWidth, appHeight);
 		drawFaceTrack(lastRemotePoints);
+		appContext.restore();
 	}
 	else {
 		// draw waiting for peer
@@ -176,17 +180,22 @@ function renderLoop() {
 
 function drawFaceTrack(points)
 {
-	if (points===null)
+	if (points==null || points==undefined || points[0]==null)
 		return;
 
 	// Draw face points
 	for (var i=0; i<points.length; i++) {
 		appContext.beginPath();
 		appContext.arc(points[i][0], points[i][1], 1, 0, 2*Math.PI);
-		appContext.fillStyle = '#00ff00ff'
+		appContext.fillStyle = '#00ff00ff';
 		appContext.fill();
 	}
 
+	appContext.fillStyle = '#ff0000ff';
+	appContext.beginPath();
+	appContext.moveTo(points[7][0], points[7][1]);
+	appContext.lineTo(points[33][0], points[33][1]);
+	appContext.stroke();
 }
 
 
@@ -198,82 +207,11 @@ function startTracking(){
 	localCtracker.start(localVideo);
 }
 
-
-function positionLoop() {
-	localcc.clearRect(0, 0, localCanvasInput.width, localCanvasInput.height);
-	if (localCtracker.getCurrentPosition()) {
-		//localCtracker.draw(localCanvasInput);
-		myLocations=localCtracker.getCurrentPosition();
-		if (peer1!=null){
-			peer1.send(JSON.stringify(myLocations));
-		}
-	}
-	requestAnimationFrame(positionLoop);
-}
-
-function checkLocations(locations){
-  	var score = 0;
-  	if (myLocations!=null && myLocations!=undefined){
-	  	/*if (Math.abs(Math.abs((myLocations[62][0] - myLocations[1][0]) + (myLocations[1][1] - myLocations[62][1])) - Math.abs((locations[62][0] - locations[1][0]) + (locations[1][1] - locations[62][1]))) <=10)
-	  		score++;
-	  	if (Math.abs(Math.abs((myLocations[13][0] - myLocations[62][0]) + (myLocations[13][1] - myLocations[62][1])) - Math.abs((locations[13][0] - locations[62][0]) + (locations[13][1] - locations[62][1]))) <=10)
-	  		score++;
-	  	if (Math.abs(Math.abs((myLocations[62][0] - myLocations[20][0]) + (myLocations[20][1] - myLocations[62][1])) - Math.abs((locations[62][0] - locations[20][0]) + (locations[20][1] - locations[62][1]))) <=10)
-	  		score++;
-	  	if (Math.abs(Math.abs((myLocations[16][0] - myLocations[62][0]) + (myLocations[16][1] - myLocations[62][1])) - Math.abs((locations[16][0] - locations[62][0]) + (locations[16][1] - locations[62][1]))) <=10)
-	  		score++;
-	  	if (Math.abs(Math.abs((myLocations[62][0] - myLocations[7][0]) + (myLocations[62][1] - myLocations[7][1])) - Math.abs((locations[62][0] - locations[7][0]) + (locations[62][1] - locations[7][1]))) <=10)
-	  		score++;*/
-	  	$('#me').html('My angle: ' + parseFloat(getAngle(myLocations)).toFixed(2));
-	  	/*console.log('[' + myLocations[7][0] + '][' +  myLocations[7][1] + ']');
-	  	console.log('[' + myLocations[33][0] + '][' +  myLocations[33][1] + ']');
-	  	console.log('[' + locations[7][0] + '][' +  locations[7][1] + ']');
-	  	console.log('[' + locations[33][0] + '][' +  locations[33][1] + ']');*/
-	  	var c=document.getElementById("localCanvas");
-		var ctx=c.getContext("2d");
-		ctx.clearRect(0,0,400,400);
-		ctx.beginPath();
-		ctx.moveTo(myLocations[7][0],myLocations[7][1]);
-		ctx.lineTo(myLocations[33][0],myLocations[33][1]);
-		ctx.stroke();
-
-		$('#friend').html('Friend angle: ' + parseFloat(getAngle(locations)).toFixed(2));
-	  	var c=document.getElementById("foreignCanvas");
-		var ctx=c.getContext("2d");
-		ctx.clearRect(0,0,400,400);
-		ctx.beginPath();
-		ctx.moveTo(locations[7][0],locations[7][1]);
-		ctx.lineTo(locations[33][0],locations[33][1]);
-		ctx.stroke();
-		
-	}
-  	return score;
-  }
-
 function getAngle(locations) {
   	var Vector = [];
   	Vector[0] = locations[33][0] - locations[7][0];
   	Vector[1] = locations[33][1] - locations[7][1];
   	return Math.abs(Math.atan2(Vector[1] - (-1), Vector[0] - 0) * 180 / Math.PI);
-}
-
-function drawScale(locator){ 
-  	//console.log(locator);
-  	if (isNaN(locator)){
-  		console.log('nan');
-  		return;
-  	}
-    var img=document.createElement('img');
-    img.src = 'empty.png';
-    img.width = 220;
-    img.height = 277;
-    //ctx.drawImage(img,cx,cy,cw,ch);
-    var cw=340+(locator*150),
-		cx=(locator)*(-75),
-		ch=240+(locator*150),
-		cy=(locator)*(-75);
-	//foreigncc.clearRect(cx,cy,cw,ch);
-	//foreigncc.drawImage(img,cx,cy,cw,ch);
 }
 
 function makeid() {
