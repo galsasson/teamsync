@@ -15,20 +15,6 @@
 		<h1>Team Sync</h1>
 		<video id="remoteVideo" class ="v" width="640" height="480" autoplay="true" hidden='true'></video>
 		<video id="localVideo" class="v" width="640" height="480" muted="true" autoplay="true" hidden='true'></video>
-		<div class="container">
-			<div class="row">
-				<div class="col-md-4">
-					<h2 id='friend'></h2>
-				</div>
-				<div class="col-md-4">
-				</div>
-				<div class="col-md-4">
-					<h2 id="me"></h2>
-					<!-- <canvas id="localCanvas" class="c" width="340" height="240" style="position: absolute;left: 0px;"></canvas> -->
-					<!-- <canvas id="localAngles" width="340px" height="240px" style="position: absolute;left: 0px;"></canvas> -->
-				</div>
-			</div>
-		</div>
 		<center>
 			<div>
 				<canvas id='app_canvas' width='640px' height='480px'></canvas>
@@ -37,29 +23,26 @@
 		<div>
 			<table width='100%'>
 				<tr>
-					<td width='(100/2)%'>
-						galgal
-						<canvas id="angles" width="340px" height="240px" style="position: absolute;left: 0px;"></canvas>
-					</td>
-					<td width='(100/2)%'>
-						hello
-					</td>
+					<td width='50%'>Draw local face tracking</td>
+					<td width='25%' id='dlft'>ON</td>
+					<td width='25%'><button onclick='toggleLocalFaceTrack();'>Toggle</button></td>
+				</tr>
+				<tr>
+					<td width='50%'>Draw remote face tracking</td>
+					<td width='25%' id='drft'>ON</td>
+					<td width='25%'><button onclick='toggleRemoteFaceTrack();'>Toggle</button></td>
+				</tr>
+				<tr>
+					<td width='50%'>Share local face tracking</td>
+					<td width='25%' id='sft'>ON</td>
+					<td width='25%'><button onclick='toggleShareFaceTrack();'>Toggle</button></td>
+				</tr>
+				<tr>
+					<td width='50%'>Latency</td>
+					<td width='25%' id='latency'>-</td>
+					<td width='25%'></td>					
 				</tr>
 			</table>
 		</div>
-		<!--
-		<div class="container">
-			<div class='row'>
-				<div class="input-group mb-3">
-					<form>
-					  <label>Send this message to your friend: </label>
-					  <pre id="outgoing"></pre>
-				      <textarea style="width:400px" id="incoming"></textarea>
-				      <button type="submit">submit</button>
-				    </form>		    
-				</div>
-			</div>
-		</div>
-		<-->
 	</body>
 </html>

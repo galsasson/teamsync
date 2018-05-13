@@ -1,7 +1,10 @@
 // Settings
 var appWidth = 640;
 var appHeight = 480;
-var bShareFaceTracking = true;
+var bShareFaceTracking = false;
+var bDrawLocalFaceTrack = true;
+var bDrawRemoteFaceTrack = true;
+
 
 // State
 var myId, peer1 = null;
@@ -53,6 +56,9 @@ $(document).ready(function(){
 	appContext=appCanvas.getContext('2d');
 	localVideo = document.getElementById('localVideo');
 	remoteVideo = document.getElementById('remoteVideo');
+	window.document.getElementById('dlft').innerHTML = bDrawLocalFaceTrack?'ON':'OFF';
+	window.document.getElementById('drft').innerHTML = bDrawRemoteFaceTrack?'ON':'OFF';
+	window.document.getElementById('sft').innerHTML = bShareFaceTracking?'ON':'OFF';	
 	renderLoop();
 
 	navigator.mediaDevices.getUserMedia(constraints)
@@ -107,19 +113,24 @@ $(document).ready(function(){
 			peer1.on('connect', function () {
 			  console.log('******  CONNECT');
 			  bConnected = true;
+			  sendPing();
 			  // startTracking();
 			})
 
-			if (bShareFaceTracking) {
-				peer1.on('data', function (data) {
-			  		var msg = JSON.parse(data);
-			  		if (msg.type === 'face') {
-			  			if (Array.isArray(msg.data)) {
-			  				lastRemotePoints = msg.data;
-			  			}
-			  		}
-				});
-			}
+			peer1.on('data', function (data) {
+		  		var msg = JSON.parse(data);
+		  		if (msg.type === 'face' && bShareFaceTracking) {
+		  			if (Array.isArray(msg.data)) {
+		  				lastRemotePoints = msg.data;
+		  			}
+		  		}
+		  		else if (msg.type == 'ping') {
+		  			peer1.send(JSON.stringify({type:'pong',data:msg.data}));
+		  		}
+		  		else if (msg.type == 'pong') {
+		  			checkLatency(JSON.parse(msg.data));
+		  		}
+			});
 
 			peer1.on('stream', function (stream){
 				console.log('******  STREAM');
@@ -155,16 +166,19 @@ function renderLoop() {
 		appContext.scale(-1, 1);
 		appContext.drawImage(remoteVideo, 0, 0, appWidth, appHeight);
 		if (bShareFaceTracking) {
+
 			// Draw the shared face points of the remote peer
-			if (Array.isArray(lastRemotePoints)) {
+			if (bDrawRemoteFaceTrack && Array.isArray(lastRemotePoints)) {
 				drawFaceTrack(lastRemotePoints);				
 			}
 		}
 		else {
-			// Track the face of the remote peer ourselves
+			// Track remote face
 			if (remoteCTracker != null) {
 				var remoteFace = remoteCTracker.getCurrentPosition();
-				drawFaceTrack(remoteFace);
+				if (bDrawRemoteFaceTrack) {
+					drawFaceTrack(remoteFace);
+				}
 			}
 		}
 		appContext.restore();
@@ -181,10 +195,16 @@ function renderLoop() {
 		appContext.scale(-localScale, localScale);
 		appContext.drawImage(localVideo, 0, 0, appWidth, appHeight);	
 
-		// Track face
+		// Track local face
 		if (localCtracker != null) {
 			var localFace=localCtracker.getCurrentPosition();
-			drawFaceTrack(localFace);
+
+			// Draw track points
+			if (bDrawLocalFaceTrack) {
+				drawFaceTrack(localFace);
+			}
+
+			// Share the points with our peer
 			if (bShareFaceTracking) {
 				if (Array.isArray(localFace) && bConnected) {
 					// Send face points
@@ -260,4 +280,37 @@ function getParameterByName(name, url) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
+function sendPing()
+{
+	if (!bConnected || peer1===null)
+		return;
+
+	var d = new Date();
+	var ms = d.getTime();
+	peer1.send(JSON.stringify({type:'ping',data:JSON.stringify(ms)}));
+	setTimeout(sendPing, 1000);
+}
+
+function checkLatency(time)
+{
+	var d = new Date();
+	var ms = d.getTime();
+	var offset = (ms-time)/2;
+	window.document.getElementById('latency').innerHTML = offset;
+}
+
+function toggleLocalFaceTrack() {
+	bDrawLocalFaceTrack = !bDrawLocalFaceTrack;
+	window.document.getElementById('dlft').innerHTML = bDrawLocalFaceTrack?'ON':'OFF';
+}
+
+function toggleRemoteFaceTrack() {
+	bDrawRemoteFaceTrack = !bDrawRemoteFaceTrack;
+	window.document.getElementById('drft').innerHTML = bDrawRemoteFaceTrack?'ON':'OFF';
+}
+
+function toggleShareFaceTrack() {
+	bShareFaceTracking = !bShareFaceTracking;
+	window.document.getElementById('sft').innerHTML = bShareFaceTracking?'ON':'OFF';	
+}
   
