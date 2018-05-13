@@ -28,6 +28,11 @@ var peerOpts = {
 			url: 'turn:teamsync.shenkar.ac.il:3478?transport=udp',
 			username: 'usertest',
 			credential: 'passwordtest'
+		},
+		{
+			"url": 'turn:13.250.13.83:3478?transport=udp',
+			"username": "YzYNCouZM1mhqhmseWk6",
+			"credential": "YzYNCouZM1mhqhmseWk6"
 		}
       ]
     }
