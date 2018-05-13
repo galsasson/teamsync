@@ -2,7 +2,15 @@ var myId, peer1 = null;
 var videoStream = null;
 var constraints = {audio:false,video:true};
 var mediaConnection = null,dataConnection=null,myLocations=null;
-var localCtracker,foreignCTracker, localCanvasInput, localcc,foreigncc,foreignCanvasInput;
+var localCtracker=null,foreignCTracker, localCanvasInput, localcc,foreigncc,foreignCanvasInput;
+var appWidth = 640;
+var appHeight = 480;
+var appCanvas = null;
+var appContext = null;
+var localVideo = null;
+var remoteVideo = null;
+var bConnected = false;
+var lastRemotePoints = null;
 
 // when running locally socketioLocation should be set to localhost:3000
 var socketioLocation = "localhost:3000";						// local
@@ -27,15 +35,21 @@ var peerOpts = {
 
 
 $(document).ready(function(){
-	myId=makeid();
-	$("#me").html(myId);
+
+  	appCanvas=document.getElementById('app_canvas');
+	appContext=appCanvas.getContext('2d');
+	localVideo = document.getElementById('localVideo');
+	remoteVideo = document.getElementById('remoteVideo');
+	renderLoop();
+
 	navigator.mediaDevices.getUserMedia(constraints)
 	  .then(function(stream) {
 
 	  	// Set local stream
 		console.log("stream ready");
-		videoStream = stream;
-	  	$('#localVideo').prop('srcObject', videoStream);
+		peerOpts.stream = stream;
+	  	$('#localVideo').prop('srcObject', stream);
+	  	startTracking();
 
 	  	// Connect to socket.io server
 		var socket = io.connect(socketioLocation);
@@ -69,7 +83,6 @@ $(document).ready(function(){
 			// setup simple peer connection
 			console.log('Setting up simplePeer, initiator = '+peerOpts.initiator);
 
-		  	peerOpts.stream = videoStream;
 			peer1 = new SimplePeer(peerOpts);
 
 			peer1.on('signal', function (data) {
@@ -80,21 +93,22 @@ $(document).ready(function(){
 
 			peer1.on('connect', function () {
 			  console.log('******  CONNECT');
-			  startTracking();
+			  bConnected = true;
+			  // startTracking();
 			})
 
 			peer1.on('data', function (data) {
-				// console.log('******  DATA')
 			  	var arr = JSON.parse(data);
 			  	if (Array.isArray(arr)) {
-			  		checkLocations(arr);
-			  		// drawScale(checkLocations(arr));
+			  		lastRemotePoints = arr;
+			  		// Got remote face points
+			  		// checkLocations();
 			  	}
 			});
 
 			peer1.on('stream', function (stream){
 				console.log('******  STREAM');
-				$('#foreignVideo').prop('srcObject', stream);
+				$('#remoteVideo').prop('srcObject', stream);
 			});
 
 			peer1.on('error', function (err) {
@@ -115,20 +129,76 @@ $(document).ready(function(){
 	
 
 	localCanvasInput = document.getElementById('localCanvas');
-	localcc = localCanvasInput.getContext('2d');
+	//localcc = localCanvasInput.getContext('2d');
 	foreignCanvasInput = document.getElementById('foreignCanvas');
-	foreigncc = foreignCanvasInput.getContext('2d');
+	//foreigncc = foreignCanvasInput.getContext('2d');
 	
 });
 
+function renderLoop() {
+
+	var localScale = bConnected?0.25:1;
+
+	// Draw remote video
+	if (remoteVideo != null) {
+		appContext.drawImage(remoteVideo, 0, 0, appWidth, appHeight);
+		drawFaceTrack(lastRemotePoints);
+	}
+	else {
+		// draw waiting for peer
+
+	}
+
+	// Draw local video
+	if (localVideo != null) {
+		appContext.save();
+		appContext.translate(appWidth, appHeight-appHeight*localScale);
+		appContext.scale(-localScale, localScale);
+		appContext.drawImage(localVideo, 0, 0, appWidth, appHeight);	
+
+		// Track face
+		if (localCtracker != null) {
+			myLocations=localCtracker.getCurrentPosition();
+			drawFaceTrack(myLocations);
+			if (myLocations && bConnected) {
+				// Send face points
+				peer1.send(JSON.stringify(myLocations));
+			}
+		}
+		appContext.restore();
+	}
+	else {
+
+	}
+
+	requestAnimationFrame(renderLoop);
+}
+
+function drawFaceTrack(points)
+{
+	if (points===null)
+		return;
+
+	// Draw face points
+	for (var i=0; i<points.length; i++) {
+		appContext.beginPath();
+		appContext.arc(points[i][0], points[i][1], 1, 0, 2*Math.PI);
+		appContext.fillStyle = '#00ff00ff'
+		appContext.fill();
+	}
+
+}
+
+
 function startTracking(){
-	vid = document.getElementById('localVideo');
-	vid.play();
+	localVideo.play();
+	console.log('Local video size: '+localVideo.videoWidth+'x'+localVideo.videoHeight);
 	localCtracker = new clm.tracker();
 	localCtracker.init();
-	localCtracker.start(vid);
-	positionLoop();
+	localCtracker.start(localVideo);
 }
+
+
 function positionLoop() {
 	localcc.clearRect(0, 0, localCanvasInput.width, localCanvasInput.height);
 	if (localCtracker.getCurrentPosition()) {

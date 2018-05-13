@@ -13,24 +13,39 @@
 	</head>
 	<body >
 		<h1>Team Sync</h1>
+		<video id="remoteVideo" class ="v" width="640" height="480" autoplay="true" hidden='true'></video>
+		<video id="localVideo" class="v" width="640" height="480" muted="true" autoplay="true" hidden='true'></video>
 		<div class="container">
 			<div class="row">
 				<div class="col-md-4">
 					<h2 id='friend'></h2>
-					<video id="foreignVideo" class ="v" width="320" height="240" autoplay="true"></video>
-					<canvas id="foreignCanvas" class="c" width="340" height="240" style="position: absolute;left: 0px;"></canvas>
-					<!-- <canvas id="foreignAngles" width="340px" height="240px" style="position: absolute;left: 0px;"></canvas> -->
 				</div>
 				<div class="col-md-4">
-					<canvas id="angles" width="340px" height="240px" style="position: absolute;left: 0px;"></canvas>
 				</div>
 				<div class="col-md-4">
 					<h2 id="me"></h2>
-					<video id="localVideo" class="v" width="320" height="240" muted="true" autoplay="true" ></video>
-					<canvas id="localCanvas" class="c" width="340" height="240" style="position: absolute;left: 0px;"></canvas>
+					<!-- <canvas id="localCanvas" class="c" width="340" height="240" style="position: absolute;left: 0px;"></canvas> -->
 					<!-- <canvas id="localAngles" width="340px" height="240px" style="position: absolute;left: 0px;"></canvas> -->
 				</div>
 			</div>
+		</div>
+		<center>
+			<div>
+				<canvas id='app_canvas' width='640px' height='480px'></canvas>
+			</div>
+		</center>
+		<div>
+			<table width='100%'>
+				<tr>
+					<td width='(100/2)%'>
+						galgal
+						<canvas id="angles" width="340px" height="240px" style="position: absolute;left: 0px;"></canvas>
+					</td>
+					<td width='(100/2)%'>
+						hello
+					</td>
+				</tr>
+			</table>
 		</div>
 		<!--
 		<div class="container">
