@@ -9,6 +9,7 @@
 		<script src="libs/simplepeer.min.js"></script>
 		<script src="libs/clmtrackr.js"></script>
 		<script src="libs/socket.io.js"></script>
+		<script src="filters.js"></script>
 		<script src="vcpeer.js"></script>
 	</head>
 	<body >
@@ -42,7 +43,19 @@
 					<td width='25%' id='latency'>-</td>
 					<td width='25%'>milliseconds</td>					
 				</tr>
+				<tr>
+					<td width='50%'>Background Subtraction</td>
+					<td width='25%' id='bsenabled'>OFF</td>
+					<td width='25%'><!--<button onclick='toggleBGSubtract();'>Toggle</button>--></td>
+				</tr>
+				<tr>
+					<td width='50%'>Capture Background</td>
+					<td width='25%'><button onclick='captureBG();'>Capture</button></td>
+					<td width='25%'></td>
+				</tr>
 			</table>
 		</div>
+		<canvas id="tmp_canvas" width="640px" height="480px" hidden='true'></canvas>
+		<canvas id="bg_canvas" width="640px" height="480px" hidden='true'></canvas>
 	</body>
 </html>

@@ -4,6 +4,7 @@ var appHeight = 480;
 var bShareFaceTracking = false;
 var bDrawLocalFaceTrack = true;
 var bDrawRemoteFaceTrack = true;
+var bBGSubtract = false;
 
 
 // State
@@ -17,6 +18,8 @@ var localVideo = null;
 var remoteVideo = null;
 var bConnected = false;
 var lastRemotePoints = null;
+var bgCanvas = null;
+var bgCtx = null;
 
 
 // when running locally socketioLocation should be set to localhost:3000
@@ -54,6 +57,8 @@ $(document).ready(function(){
 
   	appCanvas=document.getElementById('app_canvas');
 	appContext=appCanvas.getContext('2d');
+	bgCanvas=document.getElementById('bg_canvas');
+	bgCtx=bgCanvas.getContext('2d');
 	localVideo = document.getElementById('localVideo');
 	remoteVideo = document.getElementById('remoteVideo');
 	window.document.getElementById('dlft').innerHTML = bDrawLocalFaceTrack?'ON':'OFF';
@@ -193,7 +198,9 @@ function renderLoop() {
 		appContext.save();
 		appContext.translate(appWidth, appHeight-appHeight*localScale);
 		appContext.scale(-localScale, localScale);
-		appContext.drawImage(localVideo, 0, 0, appWidth, appHeight);	
+		appContext.drawImage(localVideo, 0, 0, appWidth, appHeight);
+		// appContext.drawImage(subtract(localVideo, bgCanvas), 0, 0, 120, 80);
+		// appContext.drawImage(subtract(bgCanvas, localVideo), 120, 0, 120, 80);
 
 		// Track local face
 		if (localCtracker != null) {
@@ -215,10 +222,35 @@ function renderLoop() {
 		appContext.restore();
 	}
 	else {
-
+		// No local video
 	}
 
 	requestAnimationFrame(renderLoop);
+}
+
+function filter(image, filterName)
+{
+	var c = document.getElementById('tmp_canvas');
+  	var ctx = c.getContext('2d');
+	if (filterName === 'grayscale') {
+		var grayscale = Filters.filterImage(Filters.grayscale, image);
+		ctx.putImageData(grayscale, 0, 0);
+	}
+	return c;
+}
+
+function captureBG()
+{
+	bgCtx.drawImage(localVideo, 0, 0, localVideo.width, localVideo.height);
+}
+
+function subtract(src, dst)
+{
+	var c = document.getElementById('tmp_canvas');
+  	var ctx = c.getContext('2d');
+	var pixels = Filters.filterImages(Filters.diff, src, dst);
+	ctx.putImageData(pixels, 0, 0);
+	return c;
 }
 
 function drawFaceTrack(points)
