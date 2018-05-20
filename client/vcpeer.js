@@ -5,7 +5,7 @@ var bShareFaceTracking = false;
 var bDrawLocalFaceTrack = true;
 var bDrawRemoteFaceTrack = true;
 var bBGSubtract = false;
-
+var localChart, remoteChart;
 
 // State
 var myId, peer1 = null;
@@ -20,11 +20,13 @@ var bConnected = false;
 var lastRemotePoints = null;
 var bgCanvas = null;
 var bgCtx = null;
+var localAverageCounter = 1,remoteAverageCounter = 1, localAngle = 0, remoteAngle = 0, localAverageAngle = 0.00, remoteAverageAngle = 0.00;
 
 
 // when running locally socketioLocation should be set to localhost:3000
-// var socketioLocation = "localhost:3000";						// local
+//var socketioLocation = "localhost:3000";						// local
 var socketioLocation = 'https://teamsync.shenkar.ac.il'		// for server
+
 
 var peerOpts = {
     trickle: true,
@@ -54,7 +56,28 @@ var peerOpts = {
 
 
 $(document).ready(function(){
-
+	localChart = new CanvasJS.Chart("localChartContainer", {
+		animationEnabled: true,
+		theme: "light2",
+		title:{
+			text: "Local Angle"
+		},
+		data: [{        
+			type: "line",       
+			dataPoints: []
+		}]
+	});
+	remoteChart = new CanvasJS.Chart("remoteChartContainer", {
+		animationEnabled: true,
+		theme: "light2",
+		title:{
+			text: "Local Angle"
+		},
+		data: [{        
+			type: "line",       
+			dataPoints: []
+		}]
+	});
   	appCanvas=document.getElementById('app_canvas');
 	appContext=appCanvas.getContext('2d');
 	bgCanvas=document.getElementById('bg_canvas');
@@ -174,7 +197,15 @@ function renderLoop() {
 
 			// Draw the shared face points of the remote peer
 			if (bDrawRemoteFaceTrack && Array.isArray(lastRemotePoints)) {
-				drawFaceTrack(lastRemotePoints);				
+				drawFaceTrack(lastRemotePoints);	
+				if (lastRemotePoints) {			
+					remoteAngle = getAngle(lastRemotePoints);
+					remoteAverageAngle += parseFloat(remoteAngle);
+					remoteAverageCounter++;
+					remoteChart.options.title.text = "Average angle: "  + (remoteAverageAngle / remoteAverageCounter).toFixed(2);
+					remoteChart.options.data[0].dataPoints.push({y:parseInt(remoteAngle)});
+					remoteChart.render();
+				}
 			}
 		}
 		else {
@@ -183,6 +214,14 @@ function renderLoop() {
 				var remoteFace = remoteCTracker.getCurrentPosition();
 				if (bDrawRemoteFaceTrack) {
 					drawFaceTrack(remoteFace);
+					if (remoteFace) {
+						remoteAngle = getAngle(remoteFace);
+						remoteAverageAngle += parseFloat(remoteAngle);
+						remoteAverageCounter++;
+						remoteChart.options.title.text = "Average angle: "  + (remoteAverageAngle / remoteAverageCounter).toFixed(2);
+						remoteChart.options.data[0].dataPoints.push({y:parseInt(remoteAngle)});
+						remoteChart.render();
+					}
 				}
 			}
 		}
@@ -209,6 +248,14 @@ function renderLoop() {
 			// Draw track points
 			if (bDrawLocalFaceTrack) {
 				drawFaceTrack(localFace);
+				if (localFace){
+					localAngle = getAngle(localFace);
+					localAverageAngle += parseFloat(localAngle);
+					localAverageCounter++;
+					localChart.options.title.text = "Average angle: "  + (localAverageAngle / localAverageCounter).toFixed(2);
+					localChart.options.data[0].dataPoints.push({y:parseInt(localAngle)});
+					localChart.render();
+				}
 			}
 
 			// Share the points with our peer
@@ -290,7 +337,7 @@ function getAngle(locations) {
   	var Vector = [];
   	Vector[0] = locations[33][0] - locations[7][0];
   	Vector[1] = locations[33][1] - locations[7][1];
-  	return Math.abs(Math.atan2(Vector[1] - (-1), Vector[0] - 0) * 180 / Math.PI);
+  	return parseFloat(Math.abs(Math.atan2(Vector[1] - (-1), Vector[0] - 0) * 180 / Math.PI)).toFixed(2);
 }
 
 function makeid() {

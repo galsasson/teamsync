@@ -10,17 +10,32 @@
 		<script src="libs/clmtrackr.js"></script>
 		<script src="libs/socket.io.js"></script>
 		<script src="filters.js"></script>
+		<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 		<script src="vcpeer.js"></script>
 	</head>
 	<body >
 		<h1>Team Sync</h1>
-		<video id="remoteVideo" class ="v" width="640" height="480" autoplay="true" hidden='true'></video>
-		<video id="localVideo" class="v" width="640" height="480" muted="true" autoplay="true" hidden='true'></video>
-		<center>
-			<div>
-				<canvas id='app_canvas' width='640px' height='480px'></canvas>
-			</div>
-		</center>
+		<div class="row row-list">
+		    <div class="col-xs-3">
+		    	<h1>Local</h1>
+		    	<div id="localChartContainer" style="height: 300px; width: 100%;"></div>
+		    </div>
+		    <div class="col-xs-6 ">
+		    	<video id="remoteVideo" class ="v" width="640" height="480" autoplay="true" hidden='true'></video>
+				<video id="localVideo" class="v" width="640" height="480" muted="true" autoplay="true" hidden='true'></video>
+				<center>
+					<div>
+						<canvas id='app_canvas' width='640px' height='480px'></canvas>
+					</div>
+				</center>
+		    </div>
+		    <div class="col-xs-3 ">
+		    	<h1>Remote</h1>
+		    	<div id="remoteChartContainer" style="height: 300px; width: 100%;"></div>
+		    </div>
+		</div>  
+		
+		
 		<div>
 			<table width='100%'>
 				<tr>
@@ -57,5 +72,7 @@
 		</div>
 		<canvas id="tmp_canvas" width="640px" height="480px" hidden='true'></canvas>
 		<canvas id="bg_canvas" width="640px" height="480px" hidden='true'></canvas>
+		
+
 	</body>
 </html>

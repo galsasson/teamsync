@@ -13,3 +13,7 @@ h1,h2{text-align: center;}
  #koteret h1{text-align :center  ; font-size : 250%; border : none ;  font-weight : 400 ; margin : 0px ; padding : 0px}
  #content {display : inline-block ;max-width : 785.5px ; background-color : rgba(255,255,255,0.7); padding-bottom : 30px ;}
  #content_wrapper {background-color : rgba(255,255,255,0.3)  ; max-width : 1200px }
+
+.left {position: absolute; left: 0px;}
+.right {position: absolute; right: 0px;}
+.fill {position: relative; width: 100%;}
