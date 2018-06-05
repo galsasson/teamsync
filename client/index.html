@@ -9,6 +9,9 @@
 		<script src="libs/simplepeer.min.js"></script>
 		<script src="libs/clmtrackr.js"></script>
 		<script src="libs/socket.io.js"></script>
+		<!-- <script src="libs/require.js"></script> -->
+		<script src="libs/p5.js"></script>
+		<script src="grapher.js"></script>
 		<script src="filters.js"></script>
 		<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 		<script src="vcpeer.js"></script>
@@ -16,10 +19,10 @@
 	<body >
 		<h1>Team Sync</h1>
 		<div class="row row-list">
-		    <div class="col-xs-3">
-		    	<h1>Local</h1>
-		    	<div id="localChartContainer" style="height: 300px; width: 100%;"></div>
-		    </div>
+		    <!-- <div class="col-xs-3"> -->
+		    	<!-- <h1>Local</h1> -->
+		    	<!-- <div id="localChartContainer" style="height: 300px; width: 100%;"></div> -->
+		    <!-- </div> -->
 		    <div class="col-xs-6 ">
 		    	<video id="remoteVideo" class ="v" width="640" height="480" autoplay="true" hidden='true'></video>
 				<video id="localVideo" class="v" width="640" height="480" muted="true" autoplay="true" hidden='true'></video>
@@ -29,10 +32,10 @@
 					</div>
 				</center>
 		    </div>
-		    <div class="col-xs-3 ">
-		    	<h1>Remote</h1>
-		    	<div id="remoteChartContainer" style="height: 300px; width: 100%;"></div>
-		    </div>
+		    <!-- <div class="col-xs-3 "> -->
+		    	<!-- <h1>Remote</h1> -->
+		    	<!-- <div id="remoteChartContainer" style="height: 300px; width: 100%;"></div> -->
+		    <!-- </div> -->
 		</div>  
 		
 		
@@ -67,6 +70,10 @@
 					<td width='50%'>Capture Background</td>
 					<td width='25%'><button onclick='captureBG();'>Capture</button></td>
 					<td width='25%'></td>
+				</tr>
+				<tr>
+					<td width='20%'>Angle Scope</td>
+					<td width='80%'><div id="scope_canvas"></div></td>
 				</tr>
 			</table>
 		</div>

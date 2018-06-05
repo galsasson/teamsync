@@ -1,3 +1,8 @@
+// vcpeer.js
+//
+// TeamSync Client Application
+//
+
 // Settings
 var appWidth = 640;
 var appHeight = 480;
@@ -55,29 +60,36 @@ var peerOpts = {
 };
 
 
+// P5.js setup
+var scopeW = 600;
+var scopeH = 200;
+var localAngleGraph;
+var remoteAngleGraph;
+
+function setup()
+{
+
+	createCanvas(scopeW, scopeH).parent('scope_canvas');
+
+	localAngleGraph = new Grapher(600, 200, 10);
+	localAngleGraph.setColor(128, 128, 255);
+	remoteAngleGraph = new Grapher(600, 200, 10);
+	remoteAngleGraph.setColor(255, 128, 128);
+
+}
+
+function draw()
+{
+	// clear
+	fill(0);
+	rect(0, 0, 600, 300);
+
+	remoteAngleGraph.draw();
+	localAngleGraph.draw();
+}
+
+
 $(document).ready(function(){
-	localChart = new CanvasJS.Chart("localChartContainer", {
-		animationEnabled: true,
-		theme: "light2",
-		title:{
-			text: "Local Angle"
-		},
-		data: [{        
-			type: "line",       
-			dataPoints: []
-		}]
-	});
-	remoteChart = new CanvasJS.Chart("remoteChartContainer", {
-		animationEnabled: true,
-		theme: "light2",
-		title:{
-			text: "Local Angle"
-		},
-		data: [{        
-			type: "line",       
-			dataPoints: []
-		}]
-	});
   	appCanvas=document.getElementById('app_canvas');
 	appContext=appCanvas.getContext('2d');
 	bgCanvas=document.getElementById('bg_canvas');
@@ -200,11 +212,13 @@ function renderLoop() {
 				drawFaceTrack(lastRemotePoints);	
 				if (lastRemotePoints) {			
 					remoteAngle = getAngle(lastRemotePoints);
+		
+					// Add point to graph
+					remoteAngleGraph.addPoint(remoteAngle);
+
+					// Calculate AVG
 					remoteAverageAngle += parseFloat(remoteAngle);
 					remoteAverageCounter++;
-					remoteChart.options.title.text = "Average angle: "  + (remoteAverageAngle / remoteAverageCounter).toFixed(2);
-					remoteChart.options.data[0].dataPoints.push({y:parseInt(remoteAngle)});
-					remoteChart.render();
 				}
 			}
 		}
@@ -216,11 +230,13 @@ function renderLoop() {
 					drawFaceTrack(remoteFace);
 					if (remoteFace) {
 						remoteAngle = getAngle(remoteFace);
+		
+						// Add point to graph
+						remoteAngleGraph.addPoint(remoteAngle);
+
+						// Calculate AVG
 						remoteAverageAngle += parseFloat(remoteAngle);
 						remoteAverageCounter++;
-						remoteChart.options.title.text = "Average angle: "  + (remoteAverageAngle / remoteAverageCounter).toFixed(2);
-						remoteChart.options.data[0].dataPoints.push({y:parseInt(remoteAngle)});
-						remoteChart.render();
 					}
 				}
 			}
@@ -250,11 +266,12 @@ function renderLoop() {
 				drawFaceTrack(localFace);
 				if (localFace){
 					localAngle = getAngle(localFace);
+					// Add point to graph
+					localAngleGraph.addPoint(localAngle);
+
+					// Calculate AVG
 					localAverageAngle += parseFloat(localAngle);
 					localAverageCounter++;
-					localChart.options.title.text = "Average angle: "  + (localAverageAngle / localAverageCounter).toFixed(2);
-					localChart.options.data[0].dataPoints.push({y:parseInt(localAngle)});
-					localChart.render();
 				}
 			}
 
