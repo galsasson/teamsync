@@ -145,6 +145,7 @@ class Grapher
 			return;
 		}
 
+		// calculate difference from neighbors 'e'
 		var i = d.length-10;
 		var v = d[i].v;
 		var e = (v-d[i-9].v)*1 + (v-d[i-6].v)*1 + (v-d[i-3].v)*1 + (v-d[i-1].v) +
@@ -191,7 +192,7 @@ class Grapher
 		for (var i=this.maxima.length-2; i<this.maxima.length; i++) {
 			sum += this.maxima[i].t-this.maxima[i-1].t;
 		}
-		return sum/2;
+		return 1.0/(sum/2);
 	}
 
 	getPhase() {
