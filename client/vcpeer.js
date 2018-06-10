@@ -20,6 +20,7 @@ var bConnected = false;
 var lastRemotePoints = null;
 var bgCanvas = null;
 var bgCtx = null;
+var showLocalVideo = true;
 var localAverageCounter = 1,remoteAverageCounter = 1, localAngle = 0, remoteAngle = 0, localAverageAngle = 0.00, remoteAverageAngle = 0.00;
 
 
@@ -199,12 +200,14 @@ function renderLoop() {
 			if (bDrawRemoteFaceTrack && Array.isArray(lastRemotePoints)) {
 				drawFaceTrack(lastRemotePoints);	
 				if (lastRemotePoints) {			
+					$('#remoteFace').html('Width: '+parseFloat((lastRemotePoints[13][0]-lastRemotePoints[1][0]) + ' Height: ' +(lastRemotePoints[17][1]-lastRemotePoints[7][1])).toFixed(2) + 'px');
 					remoteAngle = getAngle(lastRemotePoints);
 					remoteAverageAngle += parseFloat(remoteAngle);
 					remoteAverageCounter++;
-					remoteChart.options.title.text = "Average angle: "  + (remoteAverageAngle / remoteAverageCounter).toFixed(2);
+					remoteChart.options.title.text = "Average angle: "  + parseFloat(remoteAngle).toFixed(2);
 					remoteChart.options.data[0].dataPoints.push({y:parseInt(remoteAngle)});
 					remoteChart.render();
+					$('#remoteAverage').html(parseFloat(remoteAverageAngle/remoteAverageCounter).toFixed(2));
 				}
 			}
 		}
@@ -215,12 +218,14 @@ function renderLoop() {
 				if (bDrawRemoteFaceTrack) {
 					drawFaceTrack(remoteFace);
 					if (remoteFace) {
+						$('#remoteFace').html('Width: '+ parseFloat((remoteFace[13][0]-remoteFace[1][0]) + 'px Height: ' +(remoteFace[17][1]-remoteFace[7][1])).toFixed(2) + 'px');
 						remoteAngle = getAngle(remoteFace);
 						remoteAverageAngle += parseFloat(remoteAngle);
 						remoteAverageCounter++;
-						remoteChart.options.title.text = "Average angle: "  + (remoteAverageAngle / remoteAverageCounter).toFixed(2);
+						remoteChart.options.title.text = "Current angle: "  + parseFloat(remoteAngle).toFixed(2);
 						remoteChart.options.data[0].dataPoints.push({y:parseInt(remoteAngle)});
 						remoteChart.render();
+						$('#remoteAverage').html(parseFloat(remoteAverageAngle/remoteAverageCounter).toFixed(2));
 					}
 				}
 			}
@@ -233,7 +238,7 @@ function renderLoop() {
 	}
 
 	// Draw local video
-	if (localVideo != null) {
+	if (localVideo != null && showLocalVideo) {
 		appContext.save();
 		appContext.translate(appWidth, appHeight-appHeight*localScale);
 		appContext.scale(-localScale, localScale);
@@ -249,12 +254,14 @@ function renderLoop() {
 			if (bDrawLocalFaceTrack) {
 				drawFaceTrack(localFace);
 				if (localFace){
+					$('#localFace').html('Width: '+parseFloat((localFace[13][0]-localFace[1][0]) + ' Height: ' +(localFace[17][1]-localFace[7][1])).toFixed(2) + 'px');
 					localAngle = getAngle(localFace);
 					localAverageAngle += parseFloat(localAngle);
 					localAverageCounter++;
-					localChart.options.title.text = "Average angle: "  + (localAverageAngle / localAverageCounter).toFixed(2);
+					localChart.options.title.text = "Current angle: "  + parseFloat(localAngle).toFixed(2);
 					localChart.options.data[0].dataPoints.push({y:parseInt(localAngle)});
 					localChart.render();
+					$('#localAverage').html(parseFloat(localAverageAngle/localAverageCounter).toFixed(2));
 				}
 			}
 
@@ -331,6 +338,15 @@ function startTracking(){
 	remoteCTracker = new clm.tracker();
 	remoteCTracker.init();
 	remoteCTracker.start(remoteVideo);
+	setInterval(function(){
+		if (showLocalVideo && remoteVideo!=null){
+			localChart.options.data[0].dataPoints = [];
+			localAverageCounter = 1;
+			localAverageAngle = localAngle;
+			remoteAverageCounter = 1;
+			remoteAverageAngle = remoteAngle;
+		}
+	},60000);
 }
 
 function getAngle(locations) {
@@ -391,5 +407,16 @@ function toggleRemoteFaceTrack() {
 function toggleShareFaceTrack() {
 	bShareFaceTracking = !bShareFaceTracking;
 	window.document.getElementById('sft').innerHTML = bShareFaceTracking?'ON':'OFF';	
+}
+
+function toggleLocalCamera() {
+	showLocalVideo = !showLocalVideo;
+	window.document.getElementById('tlc').innerHTML = showLocalVideo ? 'ON' : 'OFF';
+	if (!showLocalVideo && remoteVideo!=null) {
+		appContext.clearRect(0,0,appCanvas.width,appCanvas.height);
+		localChart.options.title.text = "Current angle: 0";
+		localChart.options.data[0].dataPoints.push({y:parseInt(0)});
+		localChart.render();
+	}
 }
   
