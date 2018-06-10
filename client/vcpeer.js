@@ -73,9 +73,9 @@ function setup()
 	createCanvas(scopeW, scopeH).parent('scope_canvas');
 	frameRate(60);
 
-	localAngleGraph = new Grapher(640, 200, 5);
+	localAngleGraph = new Grapher(640, 200, 8);
 	localAngleGraph.setColor(128, 128, 255);
-	remoteAngleGraph = new Grapher(640, 200, 5);
+	remoteAngleGraph = new Grapher(640, 200, 8);
 	remoteAngleGraph.setColor(255, 128, 128);
 
 }
@@ -226,41 +226,22 @@ function renderLoop() {
 		appContext.translate(appWidth, 0);
 		appContext.scale(-1, 1);
 		appContext.drawImage(remoteVideo, 0, 0, appWidth, appHeight);
-		if (bShareFaceTracking) {
-
-			// Draw the shared face points of the remote peer
-			if (bDrawRemoteFaceTrack && Array.isArray(lastRemotePoints)) {
-				drawFaceTrack(lastRemotePoints);	
-				if (lastRemotePoints) {			
-					remoteAngle = getAngle(lastRemotePoints);
-		
-					// Add point to graph
-					remoteAngleGraph.addPoint(remoteAngle);
-
-					// Calculate AVG
-					remoteAverageAngle += parseFloat(remoteAngle);
-					remoteAverageCounter++;
-				}
+		var facePoints = bShareFaceTracking?lastRemotePoints:(remoteCTracker!=null)?remoteCTracker.getCurrentPosition():null;
+		if (Array.isArray(facePoints)) {
+			if (bDrawRemoteFaceTrack) {
+				drawFaceTrack(facePoints);
 			}
-		}
-		else {
-			// Track remote face
-			if (remoteCTracker != null) {
-				var remoteFace = remoteCTracker.getCurrentPosition();
-				if (bDrawRemoteFaceTrack) {
-					drawFaceTrack(remoteFace);
-					if (remoteFace) {
-						remoteAngle = getAngle(remoteFace);
-		
-						// Add point to graph
-						remoteAngleGraph.addPoint(remoteAngle);
 
-						// Calculate AVG
-						remoteAverageAngle += parseFloat(remoteAngle);
-						remoteAverageCounter++;
-					}
-				}
-			}
+			angle = getAngle(facePoints);
+			// Add point to graph
+			remoteAngleGraph.addPoint(angle);
+			// Calculate AVG
+			remoteAverageAngle += parseFloat(angle);
+			remoteAverageCounter++;	
+
+			// Update frequency and phase in the page
+			window.document.getElementById('remote_freq').innerHTML = parseFloat(remoteAngleGraph.freq).toFixed(2);
+			window.document.getElementById('remote_phase').innerHTML = parseFloat(remoteAngleGraph.phase).toFixed(2);		
 		}
 		appContext.restore();
 	}
@@ -282,25 +263,30 @@ function renderLoop() {
 		if (localCtracker != null) {
 			var localFace=localCtracker.getCurrentPosition();
 
-			// Draw track points
-			if (bDrawLocalFaceTrack) {
-				drawFaceTrack(localFace);
-				if (localFace){
-					localAngle = getAngle(localFace);
-					// Add point to graph
-					localAngleGraph.addPoint(localAngle);
-
-					// Calculate AVG
-					localAverageAngle += parseFloat(localAngle);
-					localAverageCounter++;
+			if (Array.isArray(localFace)) 
+			{
+				// Draw track points
+				if (bDrawLocalFaceTrack) {
+					drawFaceTrack(localFace);
 				}
-			}
+				localAngle = getAngle(localFace);
+				// Add point to graph
+				localAngleGraph.addPoint(localAngle);
+				// Calculate AVG
+				localAverageAngle += parseFloat(localAngle);
+				localAverageCounter++;
 
-			// Share the points with our peer
-			if (bShareFaceTracking) {
-				if (Array.isArray(localFace) && bConnected) {
+				// Share the points with our peer
+				if (bShareFaceTracking && bConnected) {
 					// Send face points
 					peer1.send(JSON.stringify({type:'face',data:localFace}));
+				}
+
+				// Update frequency and phase in the page
+				window.document.getElementById('local_freq').innerHTML = parseFloat(localAngleGraph.freq).toFixed(2);
+				window.document.getElementById('local_phase').innerHTML = parseFloat(localAngleGraph.phase).toFixed(2);
+				if (bConnected) {
+					window.document.getElementById('local_sync').innerHTML = parseFloat(getSync()).toFixed(2);
 				}
 			}
 		}
@@ -311,6 +297,11 @@ function renderLoop() {
 	}
 
 	requestAnimationFrame(renderLoop);
+}
+
+function getSync()
+{
+	return abs(localAngleGraph.freq-remoteAngleGraph.freq);
 }
 
 function filter(image, filterName)

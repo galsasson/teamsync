@@ -42,40 +42,64 @@
 		<div>
 			<table width='100%'>
 				<tr>
-					<td width='50%'><div id="scope_canvas"></div></td>
+					<td width='30%'><div id="scope_canvas"></div></td>
 					<td width='25%'>Angle Scope</td>
 				</tr>
 				<tr>
-					<td width='50%'>Draw local face tracking</td>
+					<td width='50%'>
+						<table>
+							<tr>
+								<td width='120px'><b>Peer</b></td>
+								<td width='120px'><b>Frequency</b></td>
+								<td width='120px'><b>Phase</b></td>
+								<td width='120px'><b>Sync (0 is perfect)</b></td>
+							</tr>
+							<tr>
+								<td width='120px'>Local</td>
+								<td width='120px' id='local_freq'>0</td>
+								<td width='120px' id='local_phase'>0</td>
+								<td width='120px' id='local_sync'>0</td>
+							</tr>
+							<tr>
+								<td width='120px'>Remote</td>
+								<td width='120px' id='remote_freq'>0</td>
+								<td width='120px' id='remote_phase'>0</td>
+								<td width='120px' id='remote_sync'>0</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td width='30%'>Draw local face tracking</td>
 					<td width='25%' id='dlft'>ON</td>
 					<td width='25%'><button onclick='toggleLocalFaceTrack();'>Toggle</button></td>
 				</tr>
 				<tr>
-					<td width='50%'>Draw remote face tracking</td>
+					<td width='30%'>Draw remote face tracking</td>
 					<td width='25%' id='drft'>ON</td>
 					<td width='25%'><button onclick='toggleRemoteFaceTrack();'>Toggle</button></td>
 				</tr>
 				<tr>
-					<td width='50%'>Share local face tracking</td>
+					<td width='30%'>Share local face tracking</td>
 					<td width='25%' id='sft'>ON</td>
 					<td width='25%'><button onclick='toggleShareFaceTrack();'>Toggle</button></td>
 				</tr>
 				<tr>
-					<td width='50%'>Latency</td>
+					<td width='30%'>Latency</td>
 					<td width='25%' id='latency'>-</td>
 					<td width='25%'>milliseconds</td>					
 				</tr>
 				<tr>
-					<td width='50%'>Background Subtraction</td>
+					<td width='30%'>Background Subtraction</td>
 					<td width='25%' id='bsenabled'>OFF</td>
 					<td width='25%'><!--<button onclick='toggleBGSubtract();'>Toggle</button>--></td>
 				</tr>
-				<tr>
-					<td width='50%'>Capture Background</td>
+<!-- 				<tr>
+					<td width='30%'>Capture Background</td>
 					<td width='25%'><button onclick='captureBG();'>Capture</button></td>
 					<td width='25%'></td>
 				</tr>
-			</table>
+ -->			</table>
 		</div>
 		<canvas id="tmp_canvas" width="640px" height="480px" hidden='true'></canvas>
 		<canvas id="bg_canvas" width="640px" height="480px" hidden='true'></canvas>

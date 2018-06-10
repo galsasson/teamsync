@@ -27,7 +27,7 @@ class Grapher
 	drawGraph() {
 		var t = float(millis())/1000;
 
-		this.drawGraphImpl(this.data, t, 70);
+		this.drawGraphImpl(this.data, t, 90);
 		this.drawGraphImpl(this.smoothData, t, 255);
 
 		this.drawMinimaMaxima();
@@ -36,6 +36,9 @@ class Grapher
 	drawGraphImpl(graph, t, alpha) {
 		if (t === undefined) {
 			t = float(millis())/1000;
+		}
+		if (alpha===undefined) {
+			alpha = 255;
 		}
 
 		// draw graph line
@@ -130,6 +133,8 @@ class Grapher
 		}
 
 		this.findLocalMinimaMaxima();
+		this.freq = this.getFreq();
+		this.phase = this.getPhase();
 	}
 
 	findLocalMinimaMaxima() {
@@ -175,6 +180,26 @@ class Grapher
 		if (this.minima.length > this.history*30) {
 			this.minima.shift();
 		}
+	}
+
+	getFreq() {
+		if (this.maxima.length<3) {
+			return 0;
+		}
+
+		var sum=0;
+		for (var i=this.maxima.length-2; i<this.maxima.length; i++) {
+			sum += this.maxima[i].t-this.maxima[i-1].t;
+		}
+		return sum/2;
+	}
+
+	getPhase() {
+		if (this.maxima.length<4 || this.smoothData.length<11) {
+			return 0;
+		}
+
+		return (this.smoothData[this.smoothData.length-10].t-this.maxima[this.maxima.length-1].t)/this.freq;
 	}
 
 	valToY(v) {
