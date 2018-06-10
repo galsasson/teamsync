@@ -25,8 +25,8 @@ var localAverageCounter = 1,remoteAverageCounter = 1, localAngle = 0, remoteAngl
 
 
 // when running locally socketioLocation should be set to localhost:3000
-//var socketioLocation = "localhost:3000";						// local
-var socketioLocation = 'https://teamsync.shenkar.ac.il'		// for server
+var socketioLocation = "localhost:3000";						// local
+//var socketioLocation = 'https://teamsync.shenkar.ac.il'		// for server
 
 
 var peerOpts = {
@@ -200,7 +200,7 @@ function renderLoop() {
 			if (bDrawRemoteFaceTrack && Array.isArray(lastRemotePoints)) {
 				drawFaceTrack(lastRemotePoints);	
 				if (lastRemotePoints) {			
-					$('#remoteFace').html('Width: '+parseFloat((lastRemotePoints[13][0]-lastRemotePoints[1][0]) + ' Height: ' +(lastRemotePoints[17][1]-lastRemotePoints[7][1])).toFixed(2) + 'px');
+					$('#remoteFace').html('Width: '+ parseFloat(lastRemotePoints[13][0]-lastRemotePoints[1][0]).toFixed(2) + ' Height: ' + parseFloat(lastRemotePoints[7][1]-lastRemotePoints[17][1]).toFixed(2) + 'px');
 					remoteAngle = getAngle(lastRemotePoints);
 					remoteAverageAngle += parseFloat(remoteAngle);
 					remoteAverageCounter++;
@@ -218,7 +218,7 @@ function renderLoop() {
 				if (bDrawRemoteFaceTrack) {
 					drawFaceTrack(remoteFace);
 					if (remoteFace) {
-						$('#remoteFace').html('Width: '+ parseFloat((remoteFace[13][0]-remoteFace[1][0]) + 'px Height: ' +(remoteFace[17][1]-remoteFace[7][1])).toFixed(2) + 'px');
+						$('#remoteFace').html('Width: '+ parseFloat(remoteFace[13][0]-remoteFace[1][0]).toFixed(2) + 'px Height: ' + parseFloat(remoteFace[7][1]-remoteFace[17][1]).toFixed(2) + 'px');
 						remoteAngle = getAngle(remoteFace);
 						remoteAverageAngle += parseFloat(remoteAngle);
 						remoteAverageCounter++;
@@ -254,7 +254,7 @@ function renderLoop() {
 			if (bDrawLocalFaceTrack) {
 				drawFaceTrack(localFace);
 				if (localFace){
-					$('#localFace').html('Width: '+parseFloat((localFace[13][0]-localFace[1][0]) + ' Height: ' +(localFace[17][1]-localFace[7][1])).toFixed(2) + 'px');
+					$('#localFace').html('Width: '+ parseFloat(localFace[13][0]-localFace[1][0]).toFixed(2) + ' Height: ' + parseFloat(localFace[7][1]-localFace[17][1]).toFixed(2) + 'px');
 					localAngle = getAngle(localFace);
 					localAverageAngle += parseFloat(localAngle);
 					localAverageCounter++;
