@@ -2,7 +2,7 @@
 
 class Grapher
 {
-	constructor(width, height, history) {
+	constructor(width, height, historySec) {		// history in sec
 		this.width = width;
 		this.height = height;
 		this.color = {
@@ -14,28 +14,64 @@ class Grapher
 		this.data = [];
 		this.min = -45;
 		this.max = 45;
-		this.history = history;
-		this.ts = 1.0/60;
-		this.lastPointAt = 0;
+		this.lastMMCooldownMS = 100;
+		this.smoothness = 0.15;			// lower is smoother
 
+		this.history = historySec;
+		this.maxima = [];
+		this.minima = [];
+		this.smoothData = [];
+		this.lastMMTime = 0;
 	}
 
-	draw() {
-		this.drawAxis();
+	drawGraph() {
+		var t = float(millis())/1000;
+
+		this.drawGraphImpl(this.data, t, 70);
+		this.drawGraphImpl(this.smoothData, t, 255);
+
+		this.drawMinimaMaxima();
+	}
+
+	drawGraphImpl(graph, t, alpha) {
+		if (t === undefined) {
+			t = float(millis())/1000;
+		}
 
 		// draw graph line
 		noFill();
-		var x = this.width;
-		var decx = float(this.width)/this.history;
-		stroke(this.color.r, this.color.g, this.color.b);
+		stroke(this.color.r, this.color.g, this.color.b, alpha);
 		beginShape();
-		for (var i=this.data.length-1; i>=0; i--) {
-			var y = map(this.data[i], this.min, this.max, this.height, 0);
+		for (var i=graph.length-1; i>=0; i--) {
+			var y = this.valToY(graph[i].v);
+			var x = this.dtToX(t-graph[i].t);
 			vertex(x, y);
 			// ellipse(x,y,3,3)			// draw points
-			x-=decx;
 		}
 		endShape();
+	}
+
+	drawMinimaMaxima() {
+		var t = float(millis())/1000;
+
+		stroke(1.3*this.color.r, 0.7*this.color.g, 0.7*this.color.b, 200);
+
+		for (var i=0; i<this.maxima.length; i++) {
+			var x = this.dtToX(t-this.maxima[i].t);
+			var y = this.valToY(this.maxima[i].v);
+			line(x, 0, x, y);
+			line(x-3, y+3, x+3, y-3);
+			line(x-3, y-3, x+3, y+3);
+		}
+
+		stroke(0.7*this.color.r, 0.7*this.color.g, 1.3*this.color.b, 200);
+		for (var i=0; i<this.minima.length; i++) {
+			var x = this.dtToX(t-this.minima[i].t);
+			var y = this.valToY(this.minima[i].v);
+			line(x, this.height, x, y);
+			line(x-3, y+3, x+3, y-3);
+			line(x-3, y-3, x+3, y+3);
+		}
 	}
 
 	drawAxis()
@@ -61,21 +97,96 @@ class Grapher
 			line(v, 0, v, this.height);
 			noStroke();
 			fill(255, 128);
-			var t = -(this.width-v)*hstep*this.ts;
-			text(parseFloat(t).toFixed(2) + " sec", v+2, this.height-6);
+			var t = -this.xToDT(v);
+			text(parseFloat(t).toFixed(1) + " sec", v+2, this.height-6);
 		}
 
 	}
 
 	addPoint(p) {
-		// var dp = {
-		// 	t: millis(),
-		// 	v: p
-		// };
-		this.data.push(p);
-		if (this.data.length > this.history+1) {
+		var dp = {
+			t: float(millis())/1000,
+			v: p
+		};
+
+		// add point to graph 
+		this.data.push(dp);
+		if (this.data.length > this.history*60+1) {
 			this.data.shift();
 		}
+
+		// add smooth graph point
+		if (this.smoothData.length==0) {
+			this.smoothData.push({t:0,v:0});
+		}
+		var lastSmooth = this.smoothData[this.smoothData.length-1];
+		var smooth = {
+			t: dp.t,
+			v: lastSmooth.v+(dp.v-lastSmooth.v)*this.smoothness
+		};
+		this.smoothData.push(smooth);
+		if (this.smoothData.length > this.history*60+1) {
+			this.smoothData.shift();
+		}
+
+		this.findLocalMinimaMaxima();
+	}
+
+	findLocalMinimaMaxima() {
+		var d = this.smoothData;
+		// var d = this.data;
+
+		if (d.length<19) {
+			return;
+		}
+
+		var i = d.length-10;
+		var v = d[i].v;
+		var e = (v-d[i-9].v)*1 + (v-d[i-6].v)*1 + (v-d[i-3].v)*1 + (v-d[i-1].v) +
+					(v-d[i+9].v)*1 + (v-d[i+6].v)*1 + (v-d[i+3].v)*1 + (v-d[i+1].v);
+		// console.log(e);
+
+		if (d[i].v>d[i-5].v&&
+			d[i].v>d[i-3].v&&
+			d[i].v>d[i-1].v &&
+			d[i].v>d[i+1].v &&
+			d[i].v>d[i+3].v &&
+			d[i].v>d[i+5].v) {
+			if (abs(e)>3 && millis()-this.lastMMTime>this.lastMMCooldownMS) {
+				this.maxima.push(d[i]);
+				this.lastMMTime = millis();
+			}
+		}
+		else if (d[i].v<d[i-5].v&&
+			d[i].v<d[i-3].v&&
+			d[i].v<d[i-1].v &&
+			d[i].v<d[i+1].v &&
+			d[i].v<d[i+3].v &&
+			d[i].v<d[i+5].v) {
+			if (abs(e)>3 && millis()-this.lastMMTime>this.lastMMCooldownMS) {
+				this.minima.push(d[i]);
+				this.lastMMTime = millis();
+			}
+		}
+
+		if (this.maxima.length > this.history*30) { 
+			this.maxima.shift();
+		}
+		if (this.minima.length > this.history*30) {
+			this.minima.shift();
+		}
+	}
+
+	valToY(v) {
+		return map(v, this.min, this.max, this.height, 0);
+	}
+
+	dtToX(t) {
+		return this.width-this.width*(t/this.history);
+	}
+
+	xToDT(x) {
+		return ((this.width-x)/this.width)*this.history;
 	}
 
 	setColor(r,g,b) {

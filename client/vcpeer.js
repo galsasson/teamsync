@@ -11,6 +11,7 @@ var bDrawLocalFaceTrack = true;
 var bDrawRemoteFaceTrack = true;
 var bBGSubtract = false;
 var localChart, remoteChart;
+var bPaused = false;
 
 // State
 var myId, peer1 = null;
@@ -61,7 +62,7 @@ var peerOpts = {
 
 
 // P5.js setup
-var scopeW = 600;
+var scopeW = 640;
 var scopeH = 200;
 var localAngleGraph;
 var remoteAngleGraph;
@@ -72,21 +73,35 @@ function setup()
 	createCanvas(scopeW, scopeH).parent('scope_canvas');
 	frameRate(60);
 
-	localAngleGraph = new Grapher(600, 200, 300);
+	localAngleGraph = new Grapher(640, 200, 5);
 	localAngleGraph.setColor(128, 128, 255);
-	remoteAngleGraph = new Grapher(600, 200, 300);
+	remoteAngleGraph = new Grapher(640, 200, 5);
 	remoteAngleGraph.setColor(255, 128, 128);
 
 }
 
 function draw()
 {
-	// clear
-	fill(0);
-	rect(0, 0, 600, 300);
+	if (bPaused) {
+		return;
+	}
 
-	remoteAngleGraph.draw();
-	localAngleGraph.draw();
+	// clear
+	noStroke();
+	fill(0);
+	rect(0, 0, 640, 300);
+
+	localAngleGraph.drawAxis();
+	remoteAngleGraph.drawGraph();
+	localAngleGraph.drawGraph();
+}
+
+function keyPressed(key)
+{
+	// console.log(key);
+	if (key.which == 32) {
+		bPaused = !bPaused;
+	}
 }
 
 
@@ -198,6 +213,11 @@ $(document).ready(function(){
 
 function renderLoop() {
 
+	if (bPaused) {
+		requestAnimationFrame(renderLoop);
+		return;
+	}
+
 	var localScale = bConnected?0.25:1;
 
 	// Draw remote video
@@ -273,9 +293,6 @@ function renderLoop() {
 					// Calculate AVG
 					localAverageAngle += parseFloat(localAngle);
 					localAverageCounter++;
-				}
-				else {
-					localAngleGraph.addPoint(0);
 				}
 			}
 
