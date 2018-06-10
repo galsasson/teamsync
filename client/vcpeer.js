@@ -70,10 +70,11 @@ function setup()
 {
 
 	createCanvas(scopeW, scopeH).parent('scope_canvas');
+	frameRate(60);
 
-	localAngleGraph = new Grapher(600, 200, 10);
+	localAngleGraph = new Grapher(600, 200, 300);
 	localAngleGraph.setColor(128, 128, 255);
-	remoteAngleGraph = new Grapher(600, 200, 10);
+	remoteAngleGraph = new Grapher(600, 200, 300);
 	remoteAngleGraph.setColor(255, 128, 128);
 
 }
@@ -273,6 +274,9 @@ function renderLoop() {
 					localAverageAngle += parseFloat(localAngle);
 					localAverageCounter++;
 				}
+				else {
+					localAngleGraph.addPoint(0);
+				}
 			}
 
 			// Share the points with our peer
@@ -351,10 +355,11 @@ function startTracking(){
 }
 
 function getAngle(locations) {
-  	var Vector = [];
-  	Vector[0] = locations[33][0] - locations[7][0];
-  	Vector[1] = locations[33][1] - locations[7][1];
-  	return parseFloat(Math.abs(Math.atan2(Vector[1] - (-1), Vector[0] - 0) * 180 / Math.PI)).toFixed(2);
+  	var vec = [];
+  	vec[0] = locations[7][0] - locations[33][0];
+  	vec[1] = locations[7][1] - locations[33][1];
+  	var ang = 90-(Math.atan2(vec[1], vec[0]) * 180 / Math.PI);
+  	return ang;
 }
 
 function makeid() {
