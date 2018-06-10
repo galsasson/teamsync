@@ -25,8 +25,8 @@ var localAverageCounter = 1,remoteAverageCounter = 1, localAngle = 0, remoteAngl
 
 
 // when running locally socketioLocation should be set to localhost:3000
-var socketioLocation = "localhost:3000";						// local
-//var socketioLocation = 'https://teamsync.shenkar.ac.il'		// for server
+//var socketioLocation = "localhost:3000";						// local
+var socketioLocation = 'https://teamsync.shenkar.ac.il'		// for server
 
 
 var peerOpts = {
