@@ -27,7 +27,7 @@ class Grapher
 	drawGraph() {
 		var t = float(millis())/1000;
 
-		this.drawGraphImpl(this.data, t, 90);
+		this.drawGraphImpl(this.data, t, 128);
 		this.drawGraphImpl(this.smoothData, t, 255);
 
 		this.drawMinimaMaxima();
@@ -84,7 +84,7 @@ class Grapher
 		var step = (this.max-this.min)/nSteps;
 		for (var v=this.min; v<this.max; v+=step) {
 			var y = map(v, this.min, this.max, this.height, 0);
-			stroke(255, 20);
+			stroke(255, 40);
 			line(0, y, this.width, y);
 			fill(255, 128);
 			noStroke();
@@ -96,7 +96,7 @@ class Grapher
 		step = (this.width/nSteps);
 		var hstep = this.history/this.width;
 		for (var v=this.width; v>0; v-=step) {
-			stroke(255, 20);
+			stroke(255, 40);
 			line(v, 0, v, this.height);
 			noStroke();
 			fill(255, 128);
@@ -200,7 +200,7 @@ class Grapher
 			return 0;
 		}
 
-		return (this.smoothData[this.smoothData.length-10].t-this.maxima[this.maxima.length-1].t)/this.freq;
+		return (this.smoothData[this.smoothData.length-10].t-this.maxima[this.maxima.length-1].t)/(1.0/this.freq);
 	}
 
 	valToY(v) {
