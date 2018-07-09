@@ -1,11 +1,17 @@
+// vcpeer.js
+//
+// TeamSync Client Application
+//
+
 // Settings
 var appWidth = 640;
 var appHeight = 480;
 var bShareFaceTracking = false;
 var bDrawLocalFaceTrack = true;
+var bDrawAngleStroke = false;
 var bDrawRemoteFaceTrack = true;
 var bBGSubtract = false;
-var localChart, remoteChart;
+var bPaused = false;
 
 // State
 var myId, peer1 = null;
@@ -20,8 +26,7 @@ var bConnected = false;
 var lastRemotePoints = null;
 var bgCanvas = null;
 var bgCtx = null;
-var showLocalVideo = true;
-var localAverageCounter = 1,remoteAverageCounter = 1, localAngle = 0, remoteAngle = 0, localAverageAngle = 0.00, remoteAverageAngle = 0.00;
+var bDrawLocalVideo = true;
 
 
 // when running locally socketioLocation should be set to localhost:3000
@@ -56,29 +61,51 @@ var peerOpts = {
 };
 
 
+// P5.js setup
+var scopeW = 640;
+var scopeH = 200;
+var localAngleGraph;
+var remoteAngleGraph;
+
+function setup()
+{
+
+	createCanvas(scopeW, scopeH).parent('scope_canvas');
+	frameRate(60);
+
+	localAngleGraph = new Grapher(640, 200, 8);
+	localAngleGraph.setColor(128, 128, 255);
+	remoteAngleGraph = new Grapher(640, 200, 8);
+	remoteAngleGraph.setColor(255, 128, 128);
+
+}
+
+function draw()
+{
+	if (bPaused) {
+		return;
+	}
+
+	// clear
+	noStroke();
+	fill(0);
+	rect(0, 0, 640, 300);
+
+	localAngleGraph.drawAxis();
+	remoteAngleGraph.drawGraph();
+	localAngleGraph.drawGraph();
+}
+
+function keyPressed(key)
+{
+	// console.log(key);
+	if (key.which == 32) {
+		bPaused = !bPaused;
+	}
+}
+
+
 $(document).ready(function(){
-	localChart = new CanvasJS.Chart("localChartContainer", {
-		animationEnabled: true,
-		theme: "light2",
-		title:{
-			text: "Local Angle"
-		},
-		data: [{        
-			type: "line",       
-			dataPoints: []
-		}]
-	});
-	remoteChart = new CanvasJS.Chart("remoteChartContainer", {
-		animationEnabled: true,
-		theme: "light2",
-		title:{
-			text: "Local Angle"
-		},
-		data: [{        
-			type: "line",       
-			dataPoints: []
-		}]
-	});
   	appCanvas=document.getElementById('app_canvas');
 	appContext=appCanvas.getContext('2d');
 	bgCanvas=document.getElementById('bg_canvas');
@@ -185,6 +212,12 @@ $(document).ready(function(){
 });
 
 function renderLoop() {
+	appContext.clearRect(0, 0, appWidth, appHeight);
+
+	if (bPaused) {
+		requestAnimationFrame(renderLoop);
+		return;
+	}
 
 	var localScale = bConnected?0.25:1;
 
@@ -194,41 +227,19 @@ function renderLoop() {
 		appContext.translate(appWidth, 0);
 		appContext.scale(-1, 1);
 		appContext.drawImage(remoteVideo, 0, 0, appWidth, appHeight);
-		if (bShareFaceTracking) {
+		var facePoints = bShareFaceTracking?lastRemotePoints:(remoteCTracker!=null)?remoteCTracker.getCurrentPosition():null;
+		if (Array.isArray(facePoints)) {
+			if (bDrawRemoteFaceTrack) {
+				drawFaceTrack(facePoints);
+			}
 
-			// Draw the shared face points of the remote peer
-			if (bDrawRemoteFaceTrack && Array.isArray(lastRemotePoints)) {
-				drawFaceTrack(lastRemotePoints);	
-				if (lastRemotePoints) {			
-					$('#remoteFace').html('Width: '+ parseFloat(lastRemotePoints[13][0]-lastRemotePoints[1][0]).toFixed(2) + ' Height: ' + parseFloat(lastRemotePoints[7][1]-lastRemotePoints[17][1]).toFixed(2) + 'px');
-					remoteAngle = getAngle(lastRemotePoints);
-					remoteAverageAngle += parseFloat(remoteAngle);
-					remoteAverageCounter++;
-					remoteChart.options.title.text = "Average angle: "  + parseFloat(remoteAngle).toFixed(2);
-					remoteChart.options.data[0].dataPoints.push({y:parseInt(remoteAngle)});
-					remoteChart.render();
-					$('#remoteAverage').html(parseFloat(remoteAverageAngle/remoteAverageCounter).toFixed(2));
-				}
-			}
-		}
-		else {
-			// Track remote face
-			if (remoteCTracker != null) {
-				var remoteFace = remoteCTracker.getCurrentPosition();
-				if (bDrawRemoteFaceTrack) {
-					drawFaceTrack(remoteFace);
-					if (remoteFace) {
-						$('#remoteFace').html('Width: '+ parseFloat(remoteFace[13][0]-remoteFace[1][0]).toFixed(2) + 'px Height: ' + parseFloat(remoteFace[7][1]-remoteFace[17][1]).toFixed(2) + 'px');
-						remoteAngle = getAngle(remoteFace);
-						remoteAverageAngle += parseFloat(remoteAngle);
-						remoteAverageCounter++;
-						remoteChart.options.title.text = "Current angle: "  + parseFloat(remoteAngle).toFixed(2);
-						remoteChart.options.data[0].dataPoints.push({y:parseInt(remoteAngle)});
-						remoteChart.render();
-						$('#remoteAverage').html(parseFloat(remoteAverageAngle/remoteAverageCounter).toFixed(2));
-					}
-				}
-			}
+			var angle = getAngle(facePoints);
+			// Add point to graph
+			remoteAngleGraph.addPoint(angle);
+
+			// Update frequency and phase in the page
+			window.document.getElementById('remote_freq').innerHTML = parseFloat(remoteAngleGraph.freq).toFixed(2);
+			window.document.getElementById('remote_phase').innerHTML = parseFloat(remoteAngleGraph.phase).toFixed(2);		
 		}
 		appContext.restore();
 	}
@@ -238,11 +249,13 @@ function renderLoop() {
 	}
 
 	// Draw local video
-	if (localVideo != null && showLocalVideo) {
+	if (localVideo != null) {
 		appContext.save();
 		appContext.translate(appWidth, appHeight-appHeight*localScale);
 		appContext.scale(-localScale, localScale);
-		appContext.drawImage(localVideo, 0, 0, appWidth, appHeight);
+		if (bDrawLocalVideo) {
+			appContext.drawImage(localVideo, 0, 0, appWidth, appHeight);
+		}
 		// appContext.drawImage(subtract(localVideo, bgCanvas), 0, 0, 120, 80);
 		// appContext.drawImage(subtract(bgCanvas, localVideo), 120, 0, 120, 80);
 
@@ -250,26 +263,27 @@ function renderLoop() {
 		if (localCtracker != null) {
 			var localFace=localCtracker.getCurrentPosition();
 
-			// Draw track points
-			if (bDrawLocalFaceTrack) {
-				drawFaceTrack(localFace);
-				if (localFace){
-					$('#localFace').html('Width: '+ parseFloat(localFace[13][0]-localFace[1][0]).toFixed(2) + ' Height: ' + parseFloat(localFace[7][1]-localFace[17][1]).toFixed(2) + 'px');
-					localAngle = getAngle(localFace);
-					localAverageAngle += parseFloat(localAngle);
-					localAverageCounter++;
-					localChart.options.title.text = "Current angle: "  + parseFloat(localAngle).toFixed(2);
-					localChart.options.data[0].dataPoints.push({y:parseInt(localAngle)});
-					localChart.render();
-					$('#localAverage').html(parseFloat(localAverageAngle/localAverageCounter).toFixed(2));
+			if (Array.isArray(localFace)) 
+			{
+				// Draw track points
+				if (bDrawLocalFaceTrack) {
+					drawFaceTrack(localFace);
 				}
-			}
+				var angle = getAngle(localFace);
+				// Add point to graph
+				localAngleGraph.addPoint(angle);
 
-			// Share the points with our peer
-			if (bShareFaceTracking) {
-				if (Array.isArray(localFace) && bConnected) {
+				// Share the points with our peer
+				if (bShareFaceTracking && bConnected) {
 					// Send face points
 					peer1.send(JSON.stringify({type:'face',data:localFace}));
+				}
+
+				// Update frequency and phase in the page
+				window.document.getElementById('local_freq').innerHTML = parseFloat(localAngleGraph.freq).toFixed(2);
+				window.document.getElementById('local_phase').innerHTML = parseFloat(localAngleGraph.phase).toFixed(2);
+				if (bConnected) {
+					window.document.getElementById('local_sync').innerHTML = parseFloat(getSync()).toFixed(2);
 				}
 			}
 		}
@@ -280,6 +294,11 @@ function renderLoop() {
 	}
 
 	requestAnimationFrame(renderLoop);
+}
+
+function getSync()
+{
+	return abs(localAngleGraph.freq-remoteAngleGraph.freq);
 }
 
 function filter(image, filterName)
@@ -320,11 +339,14 @@ function drawFaceTrack(points)
 		appContext.fill();
 	}
 
-	appContext.fillStyle = '#ff0000ff';
-	appContext.beginPath();
-	appContext.moveTo(points[7][0], points[7][1]);
-	appContext.lineTo(points[33][0], points[33][1]);
-	appContext.stroke();
+	// draw angle stroke
+	if (bDrawAngleStroke) {
+		appContext.fillStyle = '#ff0000ff';
+		appContext.beginPath();
+		appContext.moveTo(points[7][0], points[7][1]);
+		appContext.lineTo(points[33][0], points[33][1]);
+		appContext.stroke();
+	}
 }
 
 
@@ -338,22 +360,14 @@ function startTracking(){
 	remoteCTracker = new clm.tracker();
 	remoteCTracker.init();
 	remoteCTracker.start(remoteVideo);
-	setInterval(function(){
-		if (showLocalVideo && remoteVideo!=null){
-			localChart.options.data[0].dataPoints = [];
-			localAverageCounter = 1;
-			localAverageAngle = localAngle;
-			remoteAverageCounter = 1;
-			remoteAverageAngle = remoteAngle;
-		}
-	},60000);
 }
 
 function getAngle(locations) {
-  	var Vector = [];
-  	Vector[0] = locations[33][0] - locations[7][0];
-  	Vector[1] = locations[33][1] - locations[7][1];
-  	return parseFloat(Math.abs(Math.atan2(Vector[1] - (-1), Vector[0] - 0) * 180 / Math.PI)).toFixed(2);
+  	var vec = [];
+  	vec[0] = locations[7][0] - locations[33][0];
+  	vec[1] = locations[7][1] - locations[33][1];
+  	var ang = 90-(Math.atan2(vec[1], vec[0]) * 180 / Math.PI);
+  	return ang;
 }
 
 function makeid() {
@@ -410,13 +424,7 @@ function toggleShareFaceTrack() {
 }
 
 function toggleLocalCamera() {
-	showLocalVideo = !showLocalVideo;
-	window.document.getElementById('tlc').innerHTML = showLocalVideo ? 'ON' : 'OFF';
-	if (!showLocalVideo && remoteVideo!=null) {
-		appContext.clearRect(0,0,appCanvas.width,appCanvas.height);
-		localChart.options.title.text = "Current angle: 0";
-		localChart.options.data[0].dataPoints.push({y:parseInt(0)});
-		localChart.render();
-	}
+	bDrawLocalVideo = !bDrawLocalVideo;
+	window.document.getElementById('tlc').innerHTML = bDrawLocalVideo ? 'ON' : 'OFF';
 }
   
