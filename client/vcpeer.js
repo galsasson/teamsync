@@ -12,6 +12,7 @@ var bDrawAngleStroke = false;
 var bDrawRemoteFaceTrack = true;
 var bBGSubtract = false;
 var bPaused = false;
+var bTrackingEnabled = true;
 
 // State
 var myId, peer1 = null;
@@ -27,6 +28,10 @@ var lastRemotePoints = null;
 var bgCanvas = null;
 var bgCtx = null;
 var bDrawLocalVideo = true;
+// Create a capturer that exports a WebM video
+var capturer;
+var bCaptureVideo = false;
+var tracker = 'posenet';		// can be 'clm' or 'posenet' or 'both'
 
 
 // when running locally socketioLocation should be set to localhost:3000
@@ -60,52 +65,15 @@ var peerOpts = {
     }
 };
 
-
-// P5.js setup
-var scopeW = 640;
-var scopeH = 200;
-var localAngleGraph;
-var remoteAngleGraph;
-
-function setup()
-{
-
-	createCanvas(scopeW, scopeH).parent('scope_canvas');
-	frameRate(60);
-
-	localAngleGraph = new Grapher(640, 200, 8);
-	localAngleGraph.setColor(128, 128, 255);
-	remoteAngleGraph = new Grapher(640, 200, 8);
-	remoteAngleGraph.setColor(255, 128, 128);
-
-}
-
-function draw()
-{
-	if (bPaused) {
-		return;
-	}
-
-	// clear
-	noStroke();
-	fill(0);
-	rect(0, 0, 640, 300);
-
-	localAngleGraph.drawAxis();
-	remoteAngleGraph.drawGraph();
-	localAngleGraph.drawGraph();
-}
-
-function keyPressed(key)
-{
-	// console.log(key);
-	if (key.which == 32) {
-		bPaused = !bPaused;
-	}
-}
+// var _posenet = require('@tensorflow-models/posenet');
+// var _posenet = require('posenet.js');
+// var posenet = _interopRequireWildcard(_posenet);
 
 
 $(document).ready(function(){
+
+	capturer = new CCapture( { format: 'webm', framerate: 10, verbose: false } );
+
   	appCanvas=document.getElementById('app_canvas');
 	appContext=appCanvas.getContext('2d');
 	bgCanvas=document.getElementById('bg_canvas');
@@ -260,26 +228,48 @@ function renderLoop() {
 		// appContext.drawImage(subtract(bgCanvas, localVideo), 120, 0, 120, 80);
 
 		// Track local face
-		if (localCtracker != null) {
-			var localFace=localCtracker.getCurrentPosition();
+		if (bTrackingEnabled) {
+			var localFace;
 
-			if (Array.isArray(localFace)) 
-			{
-				// Draw track points
-				if (bDrawLocalFaceTrack) {
-					drawFaceTrack(localFace);
+			if ((tracker === 'clm' || tracker === 'both') && localCtracker != null) {
+				localFace=localCtracker.getCurrentPosition();
+
+				if (Array.isArray(localFace)) 
+				{
+					// Draw track points
+					if (bDrawLocalFaceTrack) {
+						drawFaceTrack(localFace);
+					}
+					var angle = getAngle(localFace);
+					// Add point to graph
+					localAngleGraph.addPoint(angle);
+
+					// Share the points with our peer
+					if (bShareFaceTracking && bConnected) {
+						// Send face points
+						peer1.send(JSON.stringify({type:'face',data:localFace}));
+					}
 				}
-				var angle = getAngle(localFace);
-				// Add point to graph
-				localAngleGraph.addPoint(angle);
+			}
 
-				// Share the points with our peer
-				if (bShareFaceTracking && bConnected) {
-					// Send face points
-					peer1.send(JSON.stringify({type:'face',data:localFace}));
-				}
+			// posenet
+			if ((tracker === 'posenet' || tracker==='both') && window.posenet) {
+				window.posenet.estimateSinglePose(localVideo, 0.5, false, 16).then(function(value) { window.localPosenetFace = value});
 
-				// Update frequency and phase in the page
+				if (window.localPosenetFace && window.localPosenetFace.score > 0.2) {
+					// console.log((window.localPosenetFace));
+					if (bDrawLocalFaceTrack) {
+						drawPosenet(window.localPosenetFace);
+					}
+
+					var angle = getAnglePosenet(window.localPosenetFace.keypoints);
+					// Add point to graph
+					localAngleGraph.addPoint(angle);
+        		}
+        	}
+
+			// Update frequency and phase in the page
+			if (localAngleGraph) {
 				window.document.getElementById('local_freq').innerHTML = parseFloat(localAngleGraph.freq).toFixed(2);
 				window.document.getElementById('local_phase').innerHTML = parseFloat(localAngleGraph.phase).toFixed(2);
 				if (bConnected) {
@@ -293,6 +283,10 @@ function renderLoop() {
 		// No local video
 	}
 
+	if (bCaptureVideo && capturer != null) {
+		capturer.capture(appCanvas);
+	}
+
 	requestAnimationFrame(renderLoop);
 }
 
@@ -301,7 +295,7 @@ function getSync()
 	return abs(localAngleGraph.freq-remoteAngleGraph.freq);
 }
 
-function filter(image, filterName)
+function filterImage(image, filterName)
 {
 	var c = document.getElementById('tmp_canvas');
   	var ctx = c.getContext('2d');
@@ -349,17 +343,54 @@ function drawFaceTrack(points)
 	}
 }
 
+function drawPosenet(points)
+{
+	if (points == undefined || points == null)
+		return;
+	
+	points = points.keypoints;
+
+	if (!Array.isArray(points)) {
+		return;
+	}
+
+	// Draw face points
+	for (var i=0; i<min(3,points.length); i++) {
+		appContext.beginPath();
+		appContext.arc(points[i].position.x, points[i].position.y, 1, 0, 2*Math.PI);
+		appContext.fillStyle = '#FF0000ff';
+		appContext.fill();
+	}
+
+	// draw angle stroke
+	if (bDrawAngleStroke) {
+		appContext.fillStyle = '#ff0000ff';
+		appContext.beginPath();
+		appContext.moveTo(points[7][0], points[7][1]);
+		appContext.lineTo(points[33][0], points[33][1]);
+		appContext.stroke();
+	}	
+}
+
+
+
 
 function startTracking(){
 	localVideo.play();
 	console.log('Local video size: '+localVideo.videoWidth+'x'+localVideo.videoHeight);
-	localCtracker = new clm.tracker();
-	localCtracker.init();
-	localCtracker.start(localVideo);
+	if (tracker == 'clm' || tracker === 'both') {
+		localCtracker = new clm.tracker();
+		localCtracker.init();
+		localCtracker.start(localVideo);
 
-	remoteCTracker = new clm.tracker();
-	remoteCTracker.init();
-	remoteCTracker.start(remoteVideo);
+		remoteCTracker = new clm.tracker();
+		remoteCTracker.init();
+		remoteCTracker.start(remoteVideo);
+	}
+
+	if (tracker == 'posenet' || tracker == 'both') {
+
+	}
 }
 
 function getAngle(locations) {
@@ -369,6 +400,15 @@ function getAngle(locations) {
   	var ang = 90-(Math.atan2(vec[1], vec[0]) * 180 / Math.PI);
   	return ang;
 }
+
+function getAnglePosenet(locations) {
+  	var vec = [];
+  	vec[0] = locations[1].position.x - locations[2].position.x;
+  	vec[1] = locations[1].position.y - locations[2].position.y;
+  	var ang = -1*(Math.atan2(vec[1], vec[0]) * 180 / Math.PI);
+  	return ang;
+}
+
 
 function makeid() {
 	var text = "";
@@ -427,4 +467,62 @@ function toggleLocalCamera() {
 	bDrawLocalVideo = !bDrawLocalVideo;
 	window.document.getElementById('tlc').innerHTML = bDrawLocalVideo ? 'ON' : 'OFF';
 }
-  
+
+function startVideoCapture() {
+	capturer.start();
+	bCaptureVideo = true;
+}
+
+
+
+
+
+
+// P5.js setup
+var scopeW = 640;
+var scopeH = 200;
+var localAngleGraph = null;
+var remoteAngleGraph = null;
+
+function setup()
+{
+
+	createCanvas(scopeW, scopeH).parent('scope_canvas');
+	frameRate(60);
+
+	localAngleGraph = new Grapher(640, 200, 8);
+	if (tracker == 'posenet') {
+		localAngleGraph.smoothness = 0.08;
+	}
+	localAngleGraph.setColor(128, 128, 255);
+	remoteAngleGraph = new Grapher(640, 200, 8);
+	remoteAngleGraph.setColor(255, 128, 128);
+
+}
+
+function draw()
+{
+	if (bPaused) {
+		return;
+	}
+
+	// clear
+	noStroke();
+	fill(255);
+	rect(0, 0, 640, 300);
+
+	localAngleGraph.drawAxis();
+	remoteAngleGraph.drawGraph();
+	localAngleGraph.drawGraph();
+}
+
+function keyPressed(key)
+{
+	// console.log(key);
+	if (key.which == 32) {
+		bPaused = !bPaused;
+	}
+}
+
+
+

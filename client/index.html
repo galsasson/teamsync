@@ -9,11 +9,12 @@
 		<script src="libs/simplepeer.min.js"></script>
 		<script src="libs/clmtrackr.js"></script>
 		<script src="libs/socket.io.js"></script>
+		<script src="libs/posenet.js"></script>
 		<!-- <script src="libs/require.js"></script> -->
 		<script src="libs/p5.js"></script>
+		<script src="libs/CCapture.all.min.js"></script>
 		<script src="grapher.js"></script>
 		<script src="filters.js"></script>
-		<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 		<script src="vcpeer.js"></script>
 	</head>
 	<body >
@@ -28,7 +29,8 @@
 					</div>
 				</center>
 		    </div>
-		</div>  
+		</div>
+		<div id='video'></div>  
 		
 		
 		<div>
@@ -65,6 +67,11 @@
 					<td width='50%'>Show local camera</td>
 					<td width='25%' id='tlc'>ON</td>
 					<td width='25%'><button onclick='toggleLocalCamera();'>Toggle</button></td>
+				</tr>
+				<tr>
+					<td width='50%'>Video Capture</td>
+					<td width='25%'><button onclick='startVideoCapture();'>Start</button></td>
+					<td></td>
 				</tr>
 				<tr>
 					<td width='30%'>Draw local face tracking</td>

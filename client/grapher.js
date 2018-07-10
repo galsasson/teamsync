@@ -22,6 +22,8 @@ class Grapher
 		this.minima = [];
 		this.smoothData = [];
 		this.lastMMTime = 0;
+		this.freq=0;
+		this.phase=0;
 	}
 
 	drawGraph() {
@@ -84,9 +86,9 @@ class Grapher
 		var step = (this.max-this.min)/nSteps;
 		for (var v=this.min; v<this.max; v+=step) {
 			var y = map(v, this.min, this.max, this.height, 0);
-			stroke(255, 40);
+			stroke(0, 30);
 			line(0, y, this.width, y);
-			fill(255, 128);
+			fill(0, 80);
 			noStroke();
 			text(v, 2, y-2);
 		}
@@ -96,10 +98,10 @@ class Grapher
 		step = (this.width/nSteps);
 		var hstep = this.history/this.width;
 		for (var v=this.width; v>0; v-=step) {
-			stroke(255, 40);
+			stroke(0, 30);
 			line(v, 0, v, this.height);
 			noStroke();
-			fill(255, 128);
+			fill(0, 80);
 			var t = -this.xToDT(v);
 			text(parseFloat(t).toFixed(1) + " sec", v+2, this.height-6);
 		}
