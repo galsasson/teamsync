@@ -210,7 +210,6 @@ function renderLoop() {
 					// Add point to graph
 					remoteAngleGraph.addPoint(angle);
 				}
-
 			}
 
 			if ((tracker === 'posenet' || tracker==='both') && window.posenet) {
