@@ -188,6 +188,7 @@ function renderLoop() {
 	}
 
 	var localScale = bConnected?0.25:1;
+	var faceDetected=false;
 
 	// Draw remote video
 	if (remoteVideo != null) {
@@ -195,19 +196,45 @@ function renderLoop() {
 		appContext.translate(appWidth, 0);
 		appContext.scale(-1, 1);
 		appContext.drawImage(remoteVideo, 0, 0, appWidth, appHeight);
-		var facePoints = bShareFaceTracking?lastRemotePoints:(remoteCTracker!=null)?remoteCTracker.getCurrentPosition():null;
-		if (Array.isArray(facePoints)) {
-			if (bDrawRemoteFaceTrack) {
-				drawFaceTrack(facePoints);
+
+		if (bTrackingEnabled) {
+			
+			if ((tracker === 'clm' || tracker === 'both') && localCtracker != null) {
+				var facePoints = bShareFaceTracking?lastRemotePoints:(remoteCTracker!=null)?remoteCTracker.getCurrentPosition():null;
+				if (Array.isArray(facePoints)) {
+					if (bDrawRemoteFaceTrack) {
+						drawFaceTrack(facePoints);
+					}
+
+					var angle = getAngle(facePoints);
+					// Add point to graph
+					remoteAngleGraph.addPoint(angle);
+				}
+
 			}
 
-			var angle = getAngle(facePoints);
-			// Add point to graph
-			remoteAngleGraph.addPoint(angle);
+			if ((tracker === 'posenet' || tracker==='both') && window.posenet) {
+				window.posenet.estimateSinglePose(remoteVideo, 0.5, false, 16).then(function(value) { window.remotePosenetFace = value});
+
+				if (window.remotePosenetFace && window.remotePosenetFace.score > 0.2) {
+					// faceDetected = true;
+
+					if (bDrawRemoteFaceTrack) {
+						drawPosenet(window.remotePosenetFace);
+					}
+
+					var angle = getAnglePosenet(window.remotePosenetFace.keypoints);
+					// Add point to graph
+					remoteAngleGraph.addPoint(angle);
+        		}
+        	}
+
 
 			// Update frequency and phase in the page
-			window.document.getElementById('remote_freq').innerHTML = parseFloat(remoteAngleGraph.freq).toFixed(2);
-			window.document.getElementById('remote_phase').innerHTML = parseFloat(remoteAngleGraph.phase).toFixed(2);		
+			if (remoteAngleGraph) {
+				window.document.getElementById('remote_freq').innerHTML = parseFloat(remoteAngleGraph.freq).toFixed(2);
+				window.document.getElementById('remote_phase').innerHTML = parseFloat(remoteAngleGraph.phase).toFixed(2);		
+			}
 		}
 		appContext.restore();
 	}
@@ -236,6 +263,8 @@ function renderLoop() {
 
 				if (Array.isArray(localFace)) 
 				{
+					faceDetected = true;
+
 					// Draw track points
 					if (bDrawLocalFaceTrack) {
 						drawFaceTrack(localFace);
@@ -257,7 +286,8 @@ function renderLoop() {
 				window.posenet.estimateSinglePose(localVideo, 0.5, false, 16).then(function(value) { window.localPosenetFace = value});
 
 				if (window.localPosenetFace && window.localPosenetFace.score > 0.2) {
-					// console.log((window.localPosenetFace));
+					faceDetected = true;
+
 					if (bDrawLocalFaceTrack) {
 						drawPosenet(window.localPosenetFace);
 					}
@@ -281,6 +311,12 @@ function renderLoop() {
 	}
 	else {
 		// No local video
+	}
+
+	// draw face detection signal
+	if (!faceDetected) {
+		appContext.fillStyle = 'rgb(255, 0, 0)';
+		appContext.fillRect(0, 0, appWidth, 2);
 	}
 
 	if (bCaptureVideo && capturer != null) {
