@@ -534,7 +534,7 @@ function toggleSessionRecording()
 	var btn = document.getElementById('toggle_session_recording_btn');
 	if (bRecordSession) {
 		btn.innerHTML = 'Stop Session Recording';
-		sessionBuffer='UTCTIME,LOCAL_ANGLE,REMOTE_ANGLE,FREQ,PHASE,SYNC,LATENCY,FACE_DETECTED\r\n';
+		sessionBuffer='UTCTIME,LOCAL_ANGLE,REMOTE_ANGLE,FREQUENCY,PHASE,SYNC,LATENCY,FACE_DETECTED\r\n';
 		sessionStartTime = (new Date()).getTime();
 	}
 	else {
