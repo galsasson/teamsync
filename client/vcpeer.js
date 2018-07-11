@@ -10,12 +10,14 @@ var bShareFaceTracking = false;
 var bDrawLocalFaceTrack = true;
 var bDrawAngleStroke = false;
 var bDrawRemoteFaceTrack = true;
+var bDrawLocalVideo = true;
 var bBGSubtract = false;
 var bPaused = false;
 var bTrackingEnabled = true;
 var tracker = 'posenet';		// can be 'clm' or 'posenet' or 'both'
 var bCaptureVideo = false;
 var bRecordSession = false;
+var bCleanInterface = false;
 
 // State
 var myId, peer1 = null;
@@ -31,7 +33,7 @@ var bConnected = false;
 var lastRemotePoints = null;
 var bgCanvas = null;
 var bgCtx = null;
-var bDrawLocalVideo = true;
+
 // Create a capturer that exports a WebM video
 var capturer;
 var sessionStartTime=0;
@@ -73,7 +75,16 @@ var peerOpts = {
 // var posenet = _interopRequireWildcard(_posenet);
 
 
-$(document).ready(function(){
+// $(document).ready(function(){
+function startApp(args) {
+
+	bCleanInterface = args.bCleanInterface;
+	if (bCleanInterface) {
+		bDrawLocalFaceTrack = false;
+		bDrawAngleStroke = false;
+		bDrawRemoteFaceTrack = false;
+		bDrawLocalVideo = false;
+	}
 
 	capturer = new CCapture( { format: 'webm', framerate: 10, verbose: false } );
 
@@ -83,9 +94,12 @@ $(document).ready(function(){
 	bgCtx=bgCanvas.getContext('2d');
 	localVideo = document.getElementById('localVideo');
 	remoteVideo = document.getElementById('remoteVideo');
-	window.document.getElementById('dlft').innerHTML = bDrawLocalFaceTrack?'ON':'OFF';
-	window.document.getElementById('drft').innerHTML = bDrawRemoteFaceTrack?'ON':'OFF';
-	window.document.getElementById('sft').innerHTML = bShareFaceTracking?'ON':'OFF';	
+
+	if (!bCleanInterface) {
+		window.document.getElementById('dlft').innerHTML = bDrawLocalFaceTrack?'ON':'OFF';
+		window.document.getElementById('drft').innerHTML = bDrawRemoteFaceTrack?'ON':'OFF';
+		window.document.getElementById('sft').innerHTML = bShareFaceTracking?'ON':'OFF';	
+	}
 	renderLoop();
 
 	navigator.mediaDevices.getUserMedia(constraints)
@@ -180,7 +194,7 @@ $(document).ready(function(){
 		});
 	});
 
-});
+};
 
 function renderLoop() {
 	appContext.clearRect(0, 0, appWidth, appHeight);
@@ -234,8 +248,10 @@ function renderLoop() {
 
 			// Update frequency and phase in the page
 			if (remoteAngleGraph) {
-				window.document.getElementById('remote_freq').innerHTML = parseFloat(remoteAngleGraph.freq).toFixed(2);
-				window.document.getElementById('remote_phase').innerHTML = parseFloat(remoteAngleGraph.phase).toFixed(2);		
+				if (!bCleanInterface) {
+					window.document.getElementById('remote_freq').innerHTML = parseFloat(remoteAngleGraph.freq).toFixed(2);
+					window.document.getElementById('remote_phase').innerHTML = parseFloat(remoteAngleGraph.phase).toFixed(2);		
+				}
 			}
 		}
 		appContext.restore();
@@ -250,7 +266,7 @@ function renderLoop() {
 		appContext.save();
 		appContext.translate(appWidth, appHeight-appHeight*localScale);
 		appContext.scale(-localScale, localScale);
-		if (bDrawLocalVideo) {
+		if (bDrawLocalVideo || !bConnected) {
 			appContext.drawImage(localVideo, 0, 0, appWidth, appHeight);
 		}
 		// appContext.drawImage(subtract(localVideo, bgCanvas), 0, 0, 120, 80);
@@ -302,10 +318,12 @@ function renderLoop() {
 
 			// Update frequency and phase in the page
 			if (localAngleGraph) {
-				window.document.getElementById('local_freq').innerHTML = parseFloat(localAngleGraph.freq).toFixed(2);
-				window.document.getElementById('local_phase').innerHTML = parseFloat(localAngleGraph.phase).toFixed(2);
-				if (bConnected) {
-					window.document.getElementById('local_sync').innerHTML = parseFloat(getSync()).toFixed(2);
+				if (!bCleanInterface) {
+					window.document.getElementById('local_freq').innerHTML = parseFloat(localAngleGraph.freq).toFixed(2);
+					window.document.getElementById('local_phase').innerHTML = parseFloat(localAngleGraph.phase).toFixed(2);
+					if (bConnected) {
+						window.document.getElementById('local_sync').innerHTML = parseFloat(getSync()).toFixed(2);
+					}
 				}
 			}
 		}
@@ -504,27 +522,37 @@ function checkLatency(time)
 	var ms = d.getTime();
 	var offset = (ms-time)/2;
 	lastLatency=offset;
-	window.document.getElementById('latency').innerHTML = offset;
+	if (!bCleanInterface) {
+		window.document.getElementById('latency').innerHTML = offset;
+	}
 }
 
 function toggleLocalFaceTrack() {
 	bDrawLocalFaceTrack = !bDrawLocalFaceTrack;
-	window.document.getElementById('dlft').innerHTML = bDrawLocalFaceTrack?'ON':'OFF';
+	if (!bCleanInterface) {
+		window.document.getElementById('dlft').innerHTML = bDrawLocalFaceTrack?'ON':'OFF';
+	}
 }
 
 function toggleRemoteFaceTrack() {
 	bDrawRemoteFaceTrack = !bDrawRemoteFaceTrack;
-	window.document.getElementById('drft').innerHTML = bDrawRemoteFaceTrack?'ON':'OFF';
+	if (!bCleanInterface) {
+		window.document.getElementById('drft').innerHTML = bDrawRemoteFaceTrack?'ON':'OFF';
+	}
 }
 
 function toggleShareFaceTrack() {
 	bShareFaceTracking = !bShareFaceTracking;
-	window.document.getElementById('sft').innerHTML = bShareFaceTracking?'ON':'OFF';	
+	if (!bCleanInterface) {
+		window.document.getElementById('sft').innerHTML = bShareFaceTracking?'ON':'OFF';	
+	}
 }
 
 function toggleLocalCamera() {
 	bDrawLocalVideo = !bDrawLocalVideo;
-	window.document.getElementById('tlc').innerHTML = bDrawLocalVideo ? 'ON' : 'OFF';
+	if (!bCleanInterface) {
+		window.document.getElementById('tlc').innerHTML = bDrawLocalVideo ? 'ON' : 'OFF';
+	}
 }
 
 function startVideoCapture() {
@@ -540,6 +568,7 @@ function toggleSessionRecording()
 		btn.innerHTML = 'Stop Session Recording';
 		sessionBuffer='UTC_TIME (ms),SESSION_TIME (hh:mm:ss:ms),LOCAL_ANGLE (degrees),REMOTE_ANGLE (degrees),FREQUENCY (cycles/second),PHASE (0-1),SYNC (0 is perfect),LATENCY (ms),FACE_DETECTED (0/1),HAVE_PEER (0/1)\r\n';
 		sessionStartTime = (new Date()).getTime();
+		document.getElementById('download_btn').style.visibility = 'hidden'
 	}
 	else {
 		// Save to downloads
@@ -549,6 +578,7 @@ function toggleSessionRecording()
   		var t = new Date();
 		dbtn.download = 'session_'+t.getHours()+'-'+t.getMinutes()+'-'+t.getSeconds()+'.csv';
 		btn.innerHTML = 'Start Session Recording';
+		dbtn.style.visibility = 'visible';
 	}
 }
 
@@ -564,6 +594,7 @@ Number.prototype.pad = function(size) {
 
 
 // P5.js setup
+var bScopeEnabled = false;
 var scopeW = 640;
 var scopeH = 200;
 var localAngleGraph = null;
@@ -571,23 +602,28 @@ var remoteAngleGraph = null;
 
 function setup()
 {
-
-	createCanvas(scopeW, scopeH).parent('scope_canvas');
-	frameRate(60);
+	if (document.getElementById('scope_canvas')) {
+		bScopeEnabled = true;
+		createCanvas(scopeW, scopeH).parent('scope_canvas');
+		frameRate(60);
+	}
 
 	localAngleGraph = new Grapher(640, 200, 8);
-	if (tracker == 'posenet') {
+	if (tracker === 'posenet') {
 		localAngleGraph.smoothness = 0.08;
 	}
 	localAngleGraph.setColor(128, 128, 255);
-	remoteAngleGraph = new Grapher(640, 200, 8);
-	remoteAngleGraph.setColor(255, 128, 128);
 
+	remoteAngleGraph = new Grapher(640, 200, 8);
+	if (tracker === 'posenet') {
+		remoteAngleGraph.smoothness = 0.08;
+	}
+	remoteAngleGraph.setColor(255, 128, 128);
 }
 
 function draw()
 {
-	if (bPaused) {
+	if (bPaused || !bScopeEnabled) {
 		return;
 	}
 

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title='Test VC'>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<link rel="stylesheet" href="style.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<script src="libs/simplepeer.min.js"></script>
+		<script src="libs/clmtrackr.js"></script>
+		<script src="libs/socket.io.js"></script>
+		<script src="libs/posenet.js"></script>
+		<!-- <script src="libs/require.js"></script> -->
+		<script src="libs/p5.js"></script>
+		<script src="libs/CCapture.all.min.js"></script>
+		<script src="grapher.js"></script>
+		<script src="filters.js"></script>
+		<script src="vcpeer.js"></script>
+	</head>
+	<body >
+		<h1>Team Sync</h1>
+		<div class="row row-list">
+		    <div class="col-xs-6 ">
+		    	<video id="remoteVideo" class ="v" width="640" height="480" autoplay="true" hidden='true'></video>
+				<video id="localVideo" class="v" width="640" height="480" muted="true" autoplay="true" hidden='true'></video>
+				<center>
+					<div>
+						<canvas style='background-color: black;' id='app_canvas' width='640px' height='480px'></canvas>
+					</div>
+				</center>
+		    </div>
+		</div>
+		<center><div id='video'></div> </center>
+		
+		
+		<div width='640px'>
+			<table width='640px'>
+				<tr>
+					<td width='40%'><button style='margin-left: 4px; padding: 6px;' id='toggle_session_recording_btn' onclick='toggleSessionRecording();'>Start Session Recording</button></td>
+					<td width='30%' id='time_td'>00:00:00:000</td>
+					<td width='30%'><a style='visibility: hidden;' id='download_btn'>Download</a></td>
+				</tr>
+			</table>
+		</div>
+		<canvas id="tmp_canvas" width="640px" height="480px" hidden='true'></canvas>
+		<canvas id="bg_canvas" width="640px" height="480px" hidden='true'></canvas>
+		
+		<script type='text/javascript'>
+			startApp({bCleanInterface: true});
+		</script>
+
+	</body>
+</html>
