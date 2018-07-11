@@ -565,7 +565,7 @@ function toggleSessionRecording()
 	bRecordSession = !bRecordSession;
 	var btn = document.getElementById('toggle_session_recording_btn');
 	if (bRecordSession) {
-		btn.innerHTML = 'Stop Session Recording';
+		btn.innerHTML = 'Stop Recording';
 		sessionBuffer='UTC_TIME (ms),SESSION_TIME (hh:mm:ss:ms),LOCAL_ANGLE (degrees),REMOTE_ANGLE (degrees),FREQUENCY (cycles/second),PHASE (0-1),SYNC (0 is perfect),LATENCY (ms),FACE_DETECTED (0/1),HAVE_PEER (0/1)\r\n';
 		sessionStartTime = (new Date()).getTime();
 		document.getElementById('download_btn').style.visibility = 'hidden'
@@ -577,7 +577,7 @@ function toggleSessionRecording()
 		dbtn.href = window.URL.createObjectURL(sessionBlob);
   		var t = new Date();
 		dbtn.download = 'session_'+t.getHours()+'-'+t.getMinutes()+'-'+t.getSeconds()+'.csv';
-		btn.innerHTML = 'Start Session Recording';
+		btn.innerHTML = 'Start Recording';
 		dbtn.style.visibility = 'visible';
 	}
 }
