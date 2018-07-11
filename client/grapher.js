@@ -205,6 +205,13 @@ class Grapher
 		return (this.smoothData[this.smoothData.length-10].t-this.maxima[this.maxima.length-1].t)/(1.0/this.freq);
 	}
 
+	getLastValue() {
+		if (this.smoothData.length<1) 
+			return 0;
+		else
+			return this.smoothData[this.smoothData.length-1].v;
+	}
+
 	valToY(v) {
 		return map(v, this.min, this.max, this.height, 0);
 	}

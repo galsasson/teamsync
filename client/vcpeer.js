@@ -13,12 +13,16 @@ var bDrawRemoteFaceTrack = true;
 var bBGSubtract = false;
 var bPaused = false;
 var bTrackingEnabled = true;
+var tracker = 'posenet';		// can be 'clm' or 'posenet' or 'both'
+var bCaptureVideo = false;
+var bRecordSession = false;
 
 // State
 var myId, peer1 = null;
 var videoStream = null;
 var constraints = {audio:false,video:true};
 var localCtracker=null,remoteCTracker=null;
+var lastLatency = 0;
 var appCanvas = null;
 var appContext = null;
 var localVideo = null;
@@ -30,9 +34,8 @@ var bgCtx = null;
 var bDrawLocalVideo = true;
 // Create a capturer that exports a WebM video
 var capturer;
-var bCaptureVideo = false;
-var tracker = 'posenet';		// can be 'clm' or 'posenet' or 'both'
-
+var sessionStartTime=0;
+var sessionBuffer = "";
 
 // when running locally socketioLocation should be set to localhost:3000
 //var socketioLocation = "localhost:3000";						// local
@@ -322,6 +325,22 @@ function renderLoop() {
 		capturer.capture(appCanvas);
 	}
 
+	// Handle Session Recording
+	if (bRecordSession) {
+		var t = new Date();
+		sessionBuffer += t.getTime()+',';
+		sessionBuffer += str(localAngleGraph.getLastValue())+',';
+		sessionBuffer += str(remoteAngleGraph.getLastValue())+',';
+		sessionBuffer += localAngleGraph.getFreq() + ',';
+		sessionBuffer += localAngleGraph.getPhase() + ',';
+		sessionBuffer += getSync().toFixed(2) + ',';
+		sessionBuffer += lastLatency + ',';
+		sessionBuffer += (faceDetected?'1':'0') + '\r\n';
+
+		var st = new Date(t.getTime()-sessionStartTime);
+		document.getElementById('time_td').innerHTML = str(st.getMinutes()) + ' : ' + str(st.getSeconds());
+	}
+
 	requestAnimationFrame(renderLoop);
 }
 
@@ -480,6 +499,7 @@ function checkLatency(time)
 	var d = new Date();
 	var ms = d.getTime();
 	var offset = (ms-time)/2;
+	lastLatency=offset;
 	window.document.getElementById('latency').innerHTML = offset;
 }
 
@@ -507,6 +527,27 @@ function startVideoCapture() {
 	capturer.start();
 	bCaptureVideo = true;
 }
+
+function toggleSessionRecording()
+{
+	bRecordSession = !bRecordSession;
+	var btn = document.getElementById('toggle_session_recording_btn');
+	if (bRecordSession) {
+		btn.innerHTML = 'Stop Session Recording';
+		sessionBuffer='UTCTIME,LOCAL_ANGLE,REMOTE_ANGLE,FREQ,PHASE,SYNC,LATENCY,FACE_DETECTED\r\n';
+		sessionStartTime = (new Date()).getTime();
+	}
+	else {
+		// Save to downloads
+		sessionBlob = new Blob([sessionBuffer], {type: 'text/plain'});
+		var dbtn = document.getElementById('download_btn');
+		dbtn.href = window.URL.createObjectURL(sessionBlob);
+  		var t = new Date();
+		dbtn.download = 'session_'+t.getHours()+'-'+t.getMinutes()+'-'+t.getSeconds()+'.csv';
+		btn.innerHTML = 'Start Session Recording';
+	}
+}
+
 
 
 
