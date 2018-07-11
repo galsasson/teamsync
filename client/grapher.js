@@ -202,7 +202,7 @@ class Grapher
 			return 0;
 		}
 
-		return (this.smoothData[this.smoothData.length-10].t-this.maxima[this.maxima.length-1].t)/(1.0/this.freq);
+		return (this.smoothData[this.smoothData.length-10].t-this.maxima[this.maxima.length-1].t)*this.freq;
 	}
 
 	getLastValue() {

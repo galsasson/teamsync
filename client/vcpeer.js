@@ -328,17 +328,21 @@ function renderLoop() {
 	// Handle Session Recording
 	if (bRecordSession) {
 		var t = new Date();
+		var st = new Date(t.getTime()-sessionStartTime);
+		var nowStr = st.getUTCHours().pad() + ':' + st.getUTCMinutes().pad() + ':' + st.getUTCSeconds().pad() + ':' + st.getUTCMilliseconds().pad(3);
+
 		sessionBuffer += t.getTime()+',';
+		sessionBuffer += nowStr + ',';
 		sessionBuffer += str(localAngleGraph.getLastValue())+',';
 		sessionBuffer += str(remoteAngleGraph.getLastValue())+',';
 		sessionBuffer += localAngleGraph.getFreq() + ',';
 		sessionBuffer += localAngleGraph.getPhase() + ',';
 		sessionBuffer += getSync().toFixed(2) + ',';
 		sessionBuffer += lastLatency + ',';
-		sessionBuffer += (faceDetected?'1':'0') + '\r\n';
+		sessionBuffer += (faceDetected?'1':'0') + ',';
+		sessionBuffer += (bConnected?'1':'0') + '\r\n';
 
-		var st = new Date(t.getTime()-sessionStartTime);
-		document.getElementById('time_td').innerHTML = str(st.getMinutes()) + ' : ' + str(st.getSeconds());
+		document.getElementById('time_td').innerHTML = nowStr;
 	}
 
 	requestAnimationFrame(renderLoop);
@@ -534,7 +538,7 @@ function toggleSessionRecording()
 	var btn = document.getElementById('toggle_session_recording_btn');
 	if (bRecordSession) {
 		btn.innerHTML = 'Stop Session Recording';
-		sessionBuffer='UTCTIME,LOCAL_ANGLE,REMOTE_ANGLE,FREQUENCY,PHASE,SYNC,LATENCY,FACE_DETECTED\r\n';
+		sessionBuffer='UTC_TIME (ms),SESSION_TIME (hh:mm:ss:ms),LOCAL_ANGLE (degrees),REMOTE_ANGLE (degrees),FREQUENCY (cycles/second),PHASE (0-1),SYNC (0 is perfect),LATENCY (ms),FACE_DETECTED (0/1),HAVE_PEER (0/1)\r\n';
 		sessionStartTime = (new Date()).getTime();
 	}
 	else {
@@ -548,6 +552,11 @@ function toggleSessionRecording()
 	}
 }
 
+Number.prototype.pad = function(size) {
+    var s = String(this);
+    while (s.length < (size || 2)) {s = "0" + s;}
+    return s;
+}
 
 
 
