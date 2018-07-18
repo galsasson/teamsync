@@ -1,4 +1,10 @@
 // grapher.js
+//
+// Realtime line plot for one numeric parameter (scope)
+//
+// Author: Gal Sasson
+
+
 
 class Grapher
 {

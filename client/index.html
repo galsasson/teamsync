@@ -61,6 +61,8 @@
 						</table>
 					</td>
 				</tr>
+			</table>
+			<table>
 				<tr>
 					<td>
 						<table width='100%'>
@@ -73,32 +75,32 @@
 					</td>
 				</tr>
 				<tr>
-					<td width='50%'>Show local camera</td>
+					<td width='25%'>Show local camera</td>
 					<td width='25%' id='tlc'>ON</td>
 					<td width='25%'><button onclick='toggleLocalCamera();'>Toggle</button></td>
 				</tr>
 				<tr>
-					<td width='50%'>Video Capture</td>
-					<td width='25%'><button onclick='startVideoCapture();'>Start</button></td>
-					<td></td>
+					<td width='25%'>Replace face with image</td>
+					<td width='25%' id='tfs'>OFF</td>
+					<td width='25%'><button onclick='toggleFaceSwap();'>Toggle</button></td>
 				</tr>
 				<tr>
-					<td width='30%'>Draw local face tracking</td>
+					<td width='25%'>Draw local face tracking</td>
 					<td width='25%' id='dlft'>ON</td>
 					<td width='25%'><button onclick='toggleLocalFaceTrack();'>Toggle</button></td>
 				</tr>
 				<tr>
-					<td width='30%'>Draw remote face tracking</td>
+					<td width='25%'>Draw remote face tracking</td>
 					<td width='25%' id='drft'>ON</td>
 					<td width='25%'><button onclick='toggleRemoteFaceTrack();'>Toggle</button></td>
 				</tr>
 				<tr>
-					<td width='30%'>Share local face tracking</td>
+					<td width='25%'>Share local face tracking</td>
 					<td width='25%' id='sft'>ON</td>
 					<td width='25%'><button onclick='toggleShareFaceTrack();'>Toggle</button></td>
 				</tr>
 				<tr>
-					<td width='30%'>Latency</td>
+					<td width='25%'>Latency</td>
 					<td width='25%' id='latency'>-</td>
 					<td width='25%'>milliseconds</td>					
 				</tr>
@@ -111,7 +113,7 @@
 		</div>
 		<canvas id="tmp_canvas" width="640px" height="480px" hidden='true'></canvas>
 		<canvas id="bg_canvas" width="640px" height="480px" hidden='true'></canvas>
-		
+		<img id='face_img' src='images/smiley.png' style='visibility: hidden;' />
 		<script type='text/javascript'>
 			startApp({bCleanInterface: false});
 		</script>

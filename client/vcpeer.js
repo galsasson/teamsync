@@ -18,6 +18,8 @@ var tracker = 'posenet';		// can be 'clm' or 'posenet' or 'both'
 var bCaptureVideo = false;
 var bRecordSession = false;
 var bCleanInterface = false;
+var bSwapFace = false;
+var smoothFactor = 0.2;
 
 // State
 var myId, peer1 = null;
@@ -33,6 +35,9 @@ var bConnected = false;
 var lastRemotePoints = null;
 var bgCanvas = null;
 var bgCtx = null;
+var faceImg = null;
+var localFace = {pos:null,angle:0,size:0};
+var remoteFace = {pos:null,angle:0,size:0};
 
 // Create a capturer that exports a WebM video
 var capturer;
@@ -70,12 +75,6 @@ var peerOpts = {
     }
 };
 
-// var _posenet = require('@tensorflow-models/posenet');
-// var _posenet = require('posenet.js');
-// var posenet = _interopRequireWildcard(_posenet);
-
-
-// $(document).ready(function(){
 function startApp(args) {
 
 	bCleanInterface = args.bCleanInterface;
@@ -85,6 +84,7 @@ function startApp(args) {
 		bDrawRemoteFaceTrack = false;
 		bDrawLocalVideo = false;
 	}
+	bSwapFace = args.smiley || false;
 
 	capturer = new CCapture( { format: 'webm', framerate: 10, verbose: false } );
 
@@ -94,6 +94,7 @@ function startApp(args) {
 	bgCtx=bgCanvas.getContext('2d');
 	localVideo = document.getElementById('localVideo');
 	remoteVideo = document.getElementById('remoteVideo');
+	faceImg = document.getElementById('face_img');
 
 	if (!bCleanInterface) {
 		window.document.getElementById('dlft').innerHTML = bDrawLocalFaceTrack?'ON':'OFF';
@@ -212,7 +213,10 @@ function renderLoop() {
 		appContext.save();
 		appContext.translate(appWidth, 0);
 		appContext.scale(-1, 1);
-		appContext.drawImage(remoteVideo, 0, 0, appWidth, appHeight);
+
+		if (!bSwapFace) {
+			appContext.drawImage(remoteVideo, 0, 0, appWidth, appHeight);
+		}
 
 		if (bTrackingEnabled) {
 			
@@ -232,8 +236,22 @@ function renderLoop() {
 			if ((tracker === 'posenet' || tracker==='both') && window.posenet) {
 				window.posenet.estimateSinglePose(remoteVideo, 0.5, false, 16).then(function(value) { window.remotePosenetFace = value});
 
-				if (window.remotePosenetFace && window.remotePosenetFace.score > 0.2) {
+				if (window.remotePosenetFace && window.remotePosenetFace.score > 0.3) {
 					// faceDetected = true;
+					// Draw face swap
+					if (bSwapFace) {
+						if (remoteFace.pos == null) {
+							remoteFace.pos = createVector(0,0);
+						}
+						remoteFace.pos.add(getFacePos(window.localPosenetFace).sub(remoteFace.pos).mult(smoothFactor));
+						remoteFace.angle += smoothFactor*(radians(getFaceAngle(window.localPosenetFace))-remoteFace.angle);
+						remoteFace.size += smoothFactor*(getFaceSize(window.localPosenetFace)*3-remoteFace.size);
+						appContext.save();
+						appContext.translate(remoteFace.pos.x, remoteFace.pos.y);
+						appContext.rotate(-remoteFace.angle);
+						appContext.drawImage(faceImg, -0.5*remoteFace.size, -0.5*remoteFace.size, remoteFace.size, remoteFace.size);
+						appContext.restore();
+					}
 
 					if (bDrawRemoteFaceTrack) {
 						drawPosenet(window.remotePosenetFace);
@@ -267,34 +285,36 @@ function renderLoop() {
 		appContext.translate(appWidth, appHeight-appHeight*localScale);
 		appContext.scale(-localScale, localScale);
 		if (bDrawLocalVideo || !bConnected) {
-			appContext.drawImage(localVideo, 0, 0, appWidth, appHeight);
+			if (!bSwapFace) {
+				appContext.drawImage(localVideo, 0, 0, appWidth, appHeight);
+			}
 		}
 		// appContext.drawImage(subtract(localVideo, bgCanvas), 0, 0, 120, 80);
 		// appContext.drawImage(subtract(bgCanvas, localVideo), 120, 0, 120, 80);
 
 		// Track local face
 		if (bTrackingEnabled) {
-			var localFace;
+			// var localFace;
 
 			if ((tracker === 'clm' || tracker === 'both') && localCtracker != null) {
-				localFace=localCtracker.getCurrentPosition();
+				var points=localCtracker.getCurrentPosition();
 
-				if (Array.isArray(localFace)) 
+				if (Array.isArray(points)) 
 				{
 					faceDetected = true;
 
 					// Draw track points
 					if (bDrawLocalFaceTrack) {
-						drawFaceTrack(localFace);
+						drawFaceTrack(points);
 					}
-					var angle = getAngle(localFace);
+					var angle = getAngle(points);
 					// Add point to graph
 					localAngleGraph.addPoint(angle);
 
 					// Share the points with our peer
 					if (bShareFaceTracking && bConnected) {
 						// Send face points
-						peer1.send(JSON.stringify({type:'face',data:localFace}));
+						peer1.send(JSON.stringify({type:'face',data:points}));
 					}
 				}
 			}
@@ -303,8 +323,23 @@ function renderLoop() {
 			if ((tracker === 'posenet' || tracker==='both') && window.posenet) {
 				window.posenet.estimateSinglePose(localVideo, 0.5, false, 16).then(function(value) { window.localPosenetFace = value});
 
-				if (window.localPosenetFace && window.localPosenetFace.score > 0.2) {
+				if (window.localPosenetFace && window.localPosenetFace.score > 0.3) {
 					faceDetected = true;
+
+					// Draw face swap
+					if (bSwapFace && (bDrawLocalVideo || !bConnected)) {
+						if (localFace.pos == null) {
+							localFace.pos = createVector(0,0);
+						}
+						localFace.pos.add(getFacePos(window.localPosenetFace).sub(localFace.pos).mult(smoothFactor));
+						localFace.angle += smoothFactor*(radians(getFaceAngle(window.localPosenetFace))-localFace.angle);
+						localFace.size += smoothFactor*(getFaceSize(window.localPosenetFace)*3-localFace.size);
+						appContext.save();
+						appContext.translate(localFace.pos.x, localFace.pos.y);
+						appContext.rotate(-localFace.angle);
+						appContext.drawImage(faceImg, -0.5*localFace.size, -0.5*localFace.size, localFace.size, localFace.size);
+						appContext.restore();
+					}
 
 					if (bDrawLocalFaceTrack) {
 						drawPosenet(window.localPosenetFace);
@@ -417,6 +452,29 @@ function drawFaceTrack(points)
 		appContext.lineTo(points[33][0], points[33][1]);
 		appContext.stroke();
 	}
+}
+
+function getFacePos(face)	// returns the nose position
+{
+	return createVector(face.keypoints[0].position.x, face.keypoints[0].position.y);
+}
+
+function getFaceAngle(face)
+{
+	var pts = face.keypoints;
+	var vec = [];
+  	vec[0] = pts[1].position.x - pts[2].position.x;
+  	vec[1] = pts[1].position.y - pts[2].position.y;
+  	var ang = -1*(Math.atan2(vec[1], vec[0]) * 180 / Math.PI);
+  	return ang;
+}
+
+function getFaceSize(face)
+{
+	var pts = face.keypoints;
+	var p1 = createVector(pts[1].position.x, pts[1].position.y);
+	var p2 = createVector(pts[2].position.x, pts[2].position.y);
+	return p1.dist(p2);
 }
 
 function drawPosenet(points)
@@ -553,6 +611,13 @@ function toggleLocalCamera() {
 	if (!bCleanInterface) {
 		window.document.getElementById('tlc').innerHTML = bDrawLocalVideo ? 'ON' : 'OFF';
 	}
+}
+
+function toggleFaceSwap() {
+	bSwapFace = !bSwapFace;
+	if (!bCleanInterface) {
+		window.document.getElementById('tfs').innerHTML = bSwapFace ? 'ON' : 'OFF';
+	}	
 }
 
 function startVideoCapture() {
