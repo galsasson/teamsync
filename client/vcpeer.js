@@ -20,6 +20,7 @@ var bRecordSession = false;
 var bCleanInterface = false;
 var bSwapFace = false;
 var smoothFactor = 0.2;
+var bDrawBG = false;
 
 // State
 var myId, peer1 = null;
@@ -38,6 +39,7 @@ var bgCtx = null;
 var faceImg = null;
 var localFace = {pos:null,angle:0,size:0};
 var remoteFace = {pos:null,angle:0,size:0};
+var bgImg = null;
 
 // Create a capturer that exports a WebM video
 var capturer;
@@ -85,6 +87,7 @@ function startApp(args) {
 		bDrawLocalVideo = false;
 	}
 	bSwapFace = args.smiley || false;
+	bDrawBG = args.drawBG || false;
 
 	capturer = new CCapture( { format: 'webm', framerate: 10, verbose: false } );
 
@@ -95,6 +98,7 @@ function startApp(args) {
 	localVideo = document.getElementById('localVideo');
 	remoteVideo = document.getElementById('remoteVideo');
 	faceImg = document.getElementById('face_img');
+	bgImg = document.getElementById('bg_img');
 
 	if (!bCleanInterface) {
 		window.document.getElementById('dlft').innerHTML = bDrawLocalFaceTrack?'ON':'OFF';
@@ -198,7 +202,12 @@ function startApp(args) {
 };
 
 function renderLoop() {
-	appContext.clearRect(0, 0, appWidth, appHeight);
+	if (bDrawBG) {
+		appContext.drawImage(bgImg, 0, 0, 640, 480);
+	}
+	else {	// clear
+		appContext.clearRect(0, 0, appWidth, appHeight);
+	}
 
 	if (bPaused) {
 		requestAnimationFrame(renderLoop);
