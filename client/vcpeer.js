@@ -245,7 +245,7 @@ function renderLoop() {
 						}
 						remoteFace.pos.add(getFacePos(window.localPosenetFace).sub(remoteFace.pos).mult(smoothFactor));
 						remoteFace.angle += smoothFactor*(radians(getFaceAngle(window.localPosenetFace))-remoteFace.angle);
-						remoteFace.size += smoothFactor*(getFaceSize(window.localPosenetFace)*3-remoteFace.size);
+						remoteFace.size += 0.5*smoothFactor*(getFaceSize(window.localPosenetFace)*3-remoteFace.size);
 						appContext.save();
 						appContext.translate(remoteFace.pos.x, remoteFace.pos.y);
 						appContext.rotate(-remoteFace.angle);
@@ -333,7 +333,7 @@ function renderLoop() {
 						}
 						localFace.pos.add(getFacePos(window.localPosenetFace).sub(localFace.pos).mult(smoothFactor));
 						localFace.angle += smoothFactor*(radians(getFaceAngle(window.localPosenetFace))-localFace.angle);
-						localFace.size += smoothFactor*(getFaceSize(window.localPosenetFace)*3-localFace.size);
+						localFace.size += 0.5*smoothFactor*(getFaceSize(window.localPosenetFace)*3-localFace.size);
 						appContext.save();
 						appContext.translate(localFace.pos.x, localFace.pos.y);
 						appContext.rotate(-localFace.angle);
