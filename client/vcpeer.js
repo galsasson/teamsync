@@ -10,6 +10,7 @@ var bShareFaceTracking = false;
 var bDrawLocalFaceTrack = true;
 var bDrawAngleStroke = false;
 var bDrawRemoteFaceTrack = true;
+var bDrawVideo = true;
 var bDrawLocalVideo = true;
 var bBGSubtract = false;
 var bPaused = false;
@@ -88,6 +89,7 @@ function startApp(args) {
 	}
 	bSwapFace = args.smiley || false;
 	bDrawBG = args.drawBG || false;
+	bDrawVideo = args.drawVideo || false;
 
 	capturer = new CCapture( { format: 'webm', framerate: 10, verbose: false } );
 
@@ -223,7 +225,7 @@ function renderLoop() {
 		appContext.translate(appWidth, 0);
 		appContext.scale(-1, 1);
 
-		if (!bSwapFace) {
+		if (bDrawVideo) {
 			appContext.drawImage(remoteVideo, 0, 0, appWidth, appHeight);
 		}
 
@@ -294,7 +296,7 @@ function renderLoop() {
 		appContext.translate(appWidth, appHeight-appHeight*localScale);
 		appContext.scale(-localScale, localScale);
 		if (bDrawLocalVideo || !bConnected) {
-			if (!bSwapFace) {
+			if (bDrawVideo) {
 				appContext.drawImage(localVideo, 0, 0, appWidth, appHeight);
 			}
 		}
@@ -342,7 +344,7 @@ function renderLoop() {
 						}
 						localFace.pos.add(getFacePos(window.localPosenetFace).sub(localFace.pos).mult(smoothFactor));
 						localFace.angle += smoothFactor*(radians(getFaceAngle(window.localPosenetFace))-localFace.angle);
-						localFace.size += 0.5*smoothFactor*(getFaceSize(window.localPosenetFace)*3-localFace.size);
+						localFace.size += 0.5*smoothFactor*(getFaceSize(window.localPosenetFace)*3.3-localFace.size);
 						appContext.save();
 						appContext.translate(localFace.pos.x, localFace.pos.y);
 						appContext.rotate(-localFace.angle);
