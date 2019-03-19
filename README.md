@@ -1,6 +1,12 @@
 # peerJStest
 TeamSynch
 
+## Structure
+ - face recognition
+ - graph plotter
+ - 
+
+
 ### index.html
 development page with all the options
 
