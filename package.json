@@ -1,5 +1,5 @@
 {
-  "name": "teamsynch",
+  "name": "teamsync",
   "version": "1.0.1",
   "description": "Test",
   "main": "server.js",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Eldad7/peerJStest.git"
+    "url": "git+https://github.com/galsasson/teamsync.git"
   },
-  "author": "Eldad C",
+  "author": "Gal Sasson",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Eldad7/peerJStest/issues"
+    "url": "https://github.com/galsasson/teamsync/issues"
   },
-  "homepage": "https://github.com/Eldad7/peerJStest#readme",
+  "homepage": "https://github.com/galsasson/teamsync#readme",
   "dependencies": {
     "clmtracker": "^1.0.0",
     "express": "^4.16.3",
