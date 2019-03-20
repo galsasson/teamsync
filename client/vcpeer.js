@@ -681,7 +681,7 @@ function setup()
 	if (document.getElementById('scope_canvas')) {
 		bScopeEnabled = true;
 		createCanvas(scopeW, scopeH).parent('scope_canvas');
-		frameRate(60);
+		frameRate(30);
 	}
 
 	localAngleGraph = new Grapher(640, 200, 8);
