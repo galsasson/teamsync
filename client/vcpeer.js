@@ -645,6 +645,8 @@ function toggleSessionRecording()
 		sessionBuffer='UTC_TIME (ms),SESSION_TIME (hh:mm:ss:ms),LOCAL_ANGLE (degrees),REMOTE_ANGLE (degrees),FREQUENCY (cycles/second),PHASE (0-1),SYNC (0 is perfect),LATENCY (ms),FACE_DETECTED (0/1),HAVE_PEER (0/1)\r\n';
 		sessionStartTime = (new Date()).getTime();
 		document.getElementById('download_btn').style.visibility = 'hidden'
+		countDown(3);
+
 	}
 	else {
 		// Save to downloads
@@ -666,7 +668,21 @@ Number.prototype.pad = function(size) {
 
 
 
+function countDown(seconds) {
+	var countDownElem = document.getElementById("countDown");
+	countDownElem.innerHTML =seconds;
+	if (seconds < 1) {
+		clearTimeout(timer);
+		countDownElem.innerHTML = "Start Moving!";
+		setTimeout(()=>{countDownElem.style.visibility = "hidden";},1500)
+		return;
+	}
+	
+	seconds--;
 
+	var timer = setTimeout("countDown(" + seconds + ")",1000);
+
+}
 
 
 // P5.js setup
@@ -715,7 +731,7 @@ function draw()
 
 function keyPressed(key)
 {
-	// console.log(key);
+	key.preventDefault();
 	if (key.which == 32) {
 		bPaused = !bPaused;
 	}

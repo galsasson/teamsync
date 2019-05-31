@@ -1,47 +1,83 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<title='TeamSync Clean'>
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-		<link rel="stylesheet" href="style.css">
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-		<script src="libs/simplepeer.min.js"></script>
-		<script src="libs/clmtrackr.js"></script>
-		<script src="libs/socket.io.js"></script>
-		<script src="libs/posenet.js"></script>
-		<!-- <script src="libs/require.js"></script> -->
-		<script src="libs/p5.js"></script>
-		<script src="libs/CCapture.all.min.js"></script>
-		<script src="grapher.js"></script>
-		<script src="filters.js"></script>
-		<script src="vcpeer.js"></script>
-	</head>
-	<body width='100%'>
-    	<video id="remoteVideo" class ="v" width="640" height="480" autoplay="true" hidden='true'></video>
-		<video id="localVideo" class="v" width="640" height="480" muted="true" autoplay="true" hidden='true'></video>
-		<center>
-			<div style='margin-top: 30px;'>
-				<canvas style='background-color: black;' id='app_canvas' width='640px' height='480px'></canvas>
-			</div>
-			<div width='640px' style='margin-top: 300px;'>
-				<table width='640px'>
-					<tr>
-						<td width='40%'><button style='margin-left: 4px; padding: 6px;' id='toggle_session_recording_btn' onclick='toggleSessionRecording();'>Start Recording</button></td>
-						<td width='30%' id='time_td'>00:00:00:000</td>
-						<td width='30%'><a style='visibility: hidden;' id='download_btn'>Download</a></td>
-					</tr>
-				</table>
-			</div>
-		</center>
+  <head>
+    <title='TeamSync Clean'>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="libs/simplepeer.min.js"></script>
+    <script src="libs/clmtrackr.js"></script>
+    <script src="libs/socket.io.js"></script>
+    <script src="libs/posenet.js"></script>
+    <!-- <script src="libs/require.js"></script> -->
+    <script src="libs/p5.js"></script>
+    <script src="libs/CCapture.all.min.js"></script>
+    <script src="grapher.js"></script>
+    <script src="filters.js"></script>
+    <script src="vcpeer.js"></script>
+  </head>
+  <body width="100%">
+    <video
+      id="remoteVideo"
+      class="v"
+      width="640"
+      height="480"
+      autoplay="true"
+      hidden="true"
+    ></video>
+    <video
+      id="localVideo"
+      class="v"
+      width="640"
+      height="480"
+      muted="true"
+      autoplay="true"
+      hidden="true"
+    ></video>
+    <center>
+      <div style="margin-top: 30px;">
+        <canvas
+          style="background-color: black;"
+          id="app_canvas"
+          width="640px"
+          height="480px"
+        ></canvas>
+      </div>
+      <div
+        id="countDown"
+        style="padding: 40px 0; width: 350px; height: 160px; margin-top: 30px; font-size: 50px; line-height: 80px;"
+      ></div>
+      <div width="640px" style="margin-top: 30px;">
+        <table width="640px">
+          <tr>
+            <td width="40%">
+              <button
+                style="margin-left: 4px; padding: 6px;"
+                id="toggle_session_recording_btn"
+                onclick="toggleSessionRecording();"
+              >
+                Start Recording
+              </button>
+            </td>
+            <td width="30%" id="time_td">00:00:00:000</td>
+            <td width="30%">
+              <a style="visibility: hidden;" id="download_btn">Download</a>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </center>
 
-		<canvas id="tmp_canvas" width="640px" height="480px" hidden='true'></canvas>
-		<canvas id="bg_canvas" width="640px" height="480px" hidden='true'></canvas>
-		<img id='face_img' src='images/smiley.png' style='visibility: hidden;' />
-		
-		<script type='text/javascript'>
-			startApp({bCleanInterface: true, drawVideo: true});
-		</script>
+    <canvas id="tmp_canvas" width="640px" height="480px" hidden="true"></canvas>
+    <canvas id="bg_canvas" width="640px" height="480px" hidden="true"></canvas>
+    <img id="face_img" src="images/smiley.png" style="visibility: hidden;" />
 
-	</body>
+    <script type="text/javascript">
+      startApp({ bCleanInterface: true, drawVideo: true });
+    </script>
+  </body>
 </html>
