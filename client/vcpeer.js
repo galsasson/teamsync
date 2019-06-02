@@ -406,7 +406,7 @@ function renderLoop() {
 		sessionBuffer += (faceDetected?'1':'0') + ',';
 		sessionBuffer += (bConnected?'1':'0') + '\r\n';
 
-		document.getElementById('time_td').innerHTML = nowStr;
+		// document.getElementById('time_td').innerHTML = nowStr;
 	}
 
 	requestAnimationFrame(renderLoop);
@@ -639,13 +639,20 @@ function startVideoCapture() {
 function toggleSessionRecording()
 {
 	bRecordSession = !bRecordSession;
+	var countDownElem = document.getElementById("countDown");
 	var btn = document.getElementById('toggle_session_recording_btn');
 	if (bRecordSession) {
 		btn.innerHTML = 'Stop Recording';
 		sessionBuffer='UTC_TIME (ms),SESSION_TIME (hh:mm:ss:ms),LOCAL_ANGLE (degrees),REMOTE_ANGLE (degrees),FREQUENCY (cycles/second),PHASE (0-1),SYNC (0 is perfect),LATENCY (ms),FACE_DETECTED (0/1),HAVE_PEER (0/1)\r\n';
 		sessionStartTime = (new Date()).getTime();
 		document.getElementById('download_btn').style.visibility = 'hidden'
+		
 		countDown(3);
+		setTimeout(()=>{
+			toggleSessionRecording();
+			countDownElem.innerHTML = "Completed!";
+			countDownElem.style.visibility = "visible";
+		},90000)
 
 	}
 	else {
